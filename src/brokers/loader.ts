@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Broker, BrokersConfig } from './types';
+import { Broker } from './types';
 import { logger } from '../logger';
 
 export function loadBrokersFromFile(filePath: string): Broker[] {
@@ -21,7 +21,7 @@ export function loadBrokersFromFile(filePath: string): Broker[] {
         logger.warn(`Skipping invalid broker entry in brokers.json: ${JSON.stringify(entry)}`);
       }
     }
-    logger.info(`Loaded ${brokers.length} broker(s) from ${filePath}`);
+    logger.info(`Loaded ${brokers.length} broker(s) from ${resolved}`);
     return brokers;
   } catch (err) { logger.warn(`Failed to parse brokers.json: ${String(err)}`); return []; }
 }
