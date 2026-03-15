@@ -1,0 +1,5 @@
+.claude
+.vs
+.env
+/node_modules
+/docs
