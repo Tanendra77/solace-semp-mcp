@@ -1,10 +1,17 @@
 import { Broker, BrokerPublic } from './types';
+import { logger } from '../logger';
 
 export class BrokerRegistry {
   private brokers = new Map<string, Broker>();
 
   constructor(initial: Broker[]) {
-    for (const b of initial) this.brokers.set(b.name.toLowerCase(), b);
+    for (const b of initial) {
+      const key = b.name.toLowerCase();
+      if (this.brokers.has(key)) {
+        logger.warn(`Duplicate broker name "${b.name}" in initial config — last entry wins.`);
+      }
+      this.brokers.set(key, b);
+    }
   }
 
   add(broker: Broker): void {

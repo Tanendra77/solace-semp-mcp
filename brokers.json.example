@@ -1,0 +1,1 @@
+{ "brokers": [{ "name": "local", "label": "Local Broker", "url": "http://localhost:8080", "username": "YOUR_USERNAME", "password": "YOUR_PASSWORD" }] }

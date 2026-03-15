@@ -34,4 +34,8 @@ describe('BrokerRegistry', () => {
   it('getOrThrow helpful message when empty', () => {
     expect(() => new BrokerRegistry([]).getOrThrow('x')).toThrow(/No brokers registered/);
   });
+  it('getOrThrow helpful message when name not found in non-empty registry', () => {
+    registry.add(sample);
+    expect(() => registry.getOrThrow('unknown')).toThrow(/not registered/);
+  });
 });

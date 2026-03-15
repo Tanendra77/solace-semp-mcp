@@ -4,3 +4,5 @@
 /node_modules
 /docs
 # /tests
+brokers.json
+*.log

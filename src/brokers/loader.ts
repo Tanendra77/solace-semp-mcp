@@ -7,9 +7,22 @@ export function loadBrokersFromFile(filePath: string): Broker[] {
   const resolved = path.resolve(filePath);
   if (!fs.existsSync(resolved)) { logger.info(`No brokers.json at ${resolved}, skipping.`); return []; }
   try {
-    const config: BrokersConfig = JSON.parse(fs.readFileSync(resolved, 'utf-8'));
-    logger.info(`Loaded ${config.brokers.length} broker(s) from ${resolved}`);
-    return config.brokers;
+    const raw = JSON.parse(fs.readFileSync(resolved, 'utf-8'));
+    if (!Array.isArray(raw?.brokers)) {
+      logger.warn(`Invalid brokers.json: "brokers" must be an array.`);
+      return [];
+    }
+    const brokers: Broker[] = [];
+    for (const entry of raw.brokers) {
+      if (typeof entry.name === 'string' && typeof entry.url === 'string' &&
+          typeof entry.username === 'string' && typeof entry.password === 'string') {
+        brokers.push({ name: entry.name, label: entry.label ?? entry.name, url: entry.url, username: entry.username, password: entry.password });
+      } else {
+        logger.warn(`Skipping invalid broker entry in brokers.json: ${JSON.stringify(entry)}`);
+      }
+    }
+    logger.info(`Loaded ${brokers.length} broker(s) from ${filePath}`);
+    return brokers;
   } catch (err) { logger.warn(`Failed to parse brokers.json: ${String(err)}`); return []; }
 }
 
