@@ -1,6 +1,11 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { SempClient } from '../../src/semp/client';
-jest.mock('axios');
+
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'),
+  request: jest.fn(),
+}));
+
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const broker = { name: 'test', label: 'Test', url: 'http://localhost:8080', username: 'admin', password: 'admin' };
@@ -20,9 +25,21 @@ describe('SempClient', () => {
   });
 
   it('throws mapped error on 401', async () => {
-    mockedAxios.request = jest.fn().mockRejectedValue(
-      Object.assign(new Error('x'), { isAxiosError: true, response: { status: 401, data: {} }, code: undefined })
-    );
+    const axiosErr = new AxiosError('Request failed', undefined, undefined, undefined,
+      { status: 401, data: {}, statusText: '', headers: {}, config: {} as any });
+    mockedAxios.request = jest.fn().mockRejectedValue(axiosErr);
     await expect(client.request({ api: 'monitor', method: 'GET', path: '/about' })).rejects.toThrow(/Authentication failed/);
+  });
+
+  it('forwards params to axios request', async () => {
+    mockedAxios.request = jest.fn().mockResolvedValue({ data: { data: [], meta: {} } });
+    await client.request({ api: 'monitor', method: 'GET', path: '/msgVpns', params: { count: 10 } });
+    expect(mockedAxios.request).toHaveBeenCalledWith(expect.objectContaining({ params: { count: 10 } }));
+  });
+
+  it('re-throws non-axios errors', async () => {
+    const nonAxios = new TypeError('unexpected');
+    mockedAxios.request = jest.fn().mockRejectedValue(nonAxios);
+    await expect(client.request({ api: 'monitor', method: 'GET', path: '/about' })).rejects.toThrow('unexpected');
   });
 });

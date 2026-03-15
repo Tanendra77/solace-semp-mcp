@@ -1,10 +1,15 @@
-import axios, { AxiosError, isAxiosError } from 'axios';
+import axios, { isAxiosError } from 'axios';
 import { Broker } from '../brokers/types';
 import { SempRequestOptions, SempResponse } from './types';
 import { mapSempError } from './errors';
 
 export class SempClient {
-  constructor(private readonly broker: Broker) {}
+  private readonly timeout: number;
+
+  constructor(private readonly broker: Broker) {
+    const parsed = parseInt(process.env['SEMP_TIMEOUT_MS'] ?? '10000', 10);
+    this.timeout = isNaN(parsed) ? 10000 : parsed;
+  }
 
   async request<T = unknown>(options: SempRequestOptions): Promise<SempResponse<T>> {
     const url = `${this.broker.url}/SEMP/v2/${options.api}${options.path}`;
@@ -13,12 +18,11 @@ export class SempClient {
         method: options.method, url,
         auth: { username: this.broker.username, password: this.broker.password },
         data: options.body, params: options.params,
-        timeout: parseInt(process.env['SEMP_TIMEOUT_MS'] ?? '10000', 10),
+        timeout: this.timeout,
       });
       return { data: response.data.data, meta: response.data.meta };
     } catch (err: unknown) {
-      if (isAxiosError(err) || (err instanceof Error && (err as any).isAxiosError === true))
-        throw new Error(mapSempError(err as AxiosError, this.broker.name));
+      if (isAxiosError(err)) throw new Error(mapSempError(err, this.broker.name));
       throw err;
     }
   }

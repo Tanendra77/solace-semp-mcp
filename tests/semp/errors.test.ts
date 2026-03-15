@@ -8,6 +8,7 @@ function makeErr(status: number, description: string): AxiosError {
 }
 
 describe('mapSempError', () => {
+  it('maps 400', () => expect(mapSempError(makeErr(400, 'Bad field'), 'prod')).toContain('Invalid request'));
   it('maps 401', () => expect(mapSempError(makeErr(401, 'x'), 'prod')).toContain('Authentication failed'));
   it('maps 403', () => expect(mapSempError(makeErr(403, 'x'), 'prod')).toContain('Permission denied'));
   it('maps 404', () => expect(mapSempError(makeErr(404, 'Queue not found'), 'prod')).toContain('Resource not found'));
