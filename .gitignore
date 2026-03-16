@@ -10,3 +10,4 @@ tests/**/*.d.ts
 # /tests
 brokers.json
 *.log
+brokers.json

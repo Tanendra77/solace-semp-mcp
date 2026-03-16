@@ -1,1 +1,11 @@
-{ "brokers": [{ "name": "local", "label": "Local Broker", "url": "http://localhost:8080", "username": "YOUR_USERNAME", "password": "YOUR_PASSWORD" }] }
+  {                                                                                                                                    
+    "brokers": [                                                                                                                       
+      {                                                                                                                                
+        "name": "dev-broker",                                                                                                          
+        "label": "Dev Broker",                                                                                                         
+        "url": "http://your-solace-host:8080",                                                                                         
+        "username": "admin",                                                                                                           
+        "password": "admin"                                                                                                            
+      }                                                                                                                                
+    ]                                                                                                                                  
+  }       
