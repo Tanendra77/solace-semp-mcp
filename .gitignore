@@ -2,7 +2,11 @@
 .vs
 .env
 /node_modules
+/dist
 /docs
+tests/**/*.js
+tests/**/*.js.map
+tests/**/*.d.ts
 # /tests
 brokers.json
 *.log

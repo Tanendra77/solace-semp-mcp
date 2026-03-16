@@ -1,5 +1,5 @@
-import { RiskTier } from './tiers';
-export { RiskTier };
+import { RiskTier, tierFromMethod } from './tiers';
+export { RiskTier, tierFromMethod };
 
 export interface DryRunOptions {
   tier: RiskTier; action: string; brokerName: string;
