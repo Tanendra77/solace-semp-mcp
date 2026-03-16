@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { logger } from '../logger';
 import { BrokerRegistry } from '../brokers/registry';
@@ -17,7 +17,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   }
 }
 
-export async function startSseTransport(server: Server, registry: BrokerRegistry): Promise<void> {
+export async function startSseTransport(server: McpServer, registry: BrokerRegistry): Promise<void> {
   const app = express();
   const rawPort = parseInt(process.env['PORT'] ?? '3000', 10);
   const port = isNaN(rawPort) ? 3000 : rawPort;
@@ -67,7 +67,7 @@ export async function startSseTransport(server: Server, registry: BrokerRegistry
     try {
       const transport = new SSEServerTransport('/messages', res);
       transports.set(transport.sessionId, transport);
-      await server.connect(transport);
+      await server.server.connect(transport);
       logger.info(`SSE client connected: ${transport.sessionId}`);
       req.on('close', () => transports.delete(transport.sessionId));
     } catch (err) {
