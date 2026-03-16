@@ -1,0 +1,193 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@700;800&family=Inter:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d1117;
+    padding: 24px;
+  }
+  .hero {
+    position: relative;
+    overflow: hidden;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.75rem 2rem 2.1rem;
+    text-align: center;
+    border: 1px solid #21262d;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top, rgba(0, 200, 149, 0.14), transparent 34%),
+      radial-gradient(circle at 84% 16%, rgba(60, 52, 137, 0.24), transparent 26%),
+      linear-gradient(180deg, #0d1117 0%, #070b10 100%);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  }
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(139, 148, 158, 0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 148, 158, 0.14) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.5;
+  }
+  .icon-wrap {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 1.25rem;
+    border: 1px solid #30363d;
+    border-radius: 18px;
+    background: rgba(22, 27, 34, 0.92);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  }
+  .icon-wrap svg { width: 36px; height: 36px; }
+  h1 {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0.5rem;
+    color: #f0f6fc;
+    font-family: 'Syne', sans-serif;
+    font-size: 2.7rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  h1 span { color: #00c895; }
+  .mono {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 1.25rem;
+    color: #8b949e;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+  }
+  .tagline {
+    position: relative;
+    z-index: 1;
+    max-width: 540px;
+    margin: 0 auto 1.75rem;
+    color: #c9d1d9;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+  .badges {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 2rem;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid;
+    border-radius: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .badge.green { background: #e1f5ee; color: #0f6e56; border-color: #5dcaa5; }
+  .badge.purple { background: #eeedfe; color: #3c3489; border-color: #afa9ec; }
+  .badge.blue { background: #e6f1fb; color: #185fa5; border-color: #85b7eb; }
+  .badge.amber { background: #faeeda; color: #854f0b; border-color: #ef9f27; }
+  .badge.gray { background: #f1efe8; color: #444441; border-color: #b4b2a9; }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+  .arch {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 1.5rem 1rem 0.25rem;
+    border-top: 1px solid #21262d;
+  }
+  .node {
+    min-width: 96px;
+    padding: 10px 18px;
+    border: 1px solid;
+    border-radius: 10px;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .node.ai { background: #eeedfe; color: #3c3489; border-color: #afa9ec; }
+  .node.mcp { background: #e1f5ee; color: #0f6e56; border-color: #5dcaa5; }
+  .node.broker { background: #e6f1fb; color: #185fa5; border-color: #85b7eb; }
+  .node-sub {
+    margin-top: 2px;
+    opacity: 0.72;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 400;
+  }
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px;
+  }
+  .arrow-line {
+    width: 36px;
+    height: 1px;
+    background: #30363d;
+  }
+  .arrow-label {
+    color: #8b949e;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+  .arrow-head {
+    margin-top: -3px;
+    color: #8b949e;
+    font-size: 10px;
+  }
+</style>
+
+<div class="hero">
+  <div class="grid-bg"></div>
+  <div class="icon-wrap">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="10" width="28" height="5" rx="2.5" fill="#00C895" opacity=".9"/>
+      <rect x="4" y="18" width="20" height="5" rx="2.5" fill="#00C895" opacity=".6"/>
+      <rect x="4" y="26" width="14" height="5" rx="2.5" fill="#00C895" opacity=".35"/>
+      <circle cx="29" cy="28.5" r="5" fill="#3C3489" opacity=".9"/>
+      <path d="M27 28.5h4M29 26.5v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <h1>solace-<span>semp</span>-mcp</h1>
+  <div class="mono">// model context protocol · solace semp v2</div>
+  <p class="tagline">Manage Solace PubSub+ brokers through natural language. Configure VPNs, inspect queues, and control your messaging infrastructure through AI.</p>
+  <div class="badges">
+    <span class="badge green"><span class="dot"></span>MCP Compatible</span>
+    <span class="badge purple"><span class="dot"></span>SEMP v2</span>
+    <span class="badge blue"><span class="dot"></span>Node.js 20+</span>
+    <span class="badge amber"><span class="dot"></span>MIT License</span>
+    <span class="badge gray"><span class="dot"></span>TypeScript</span>
+  </div>
+  <div class="arch">
+    <div class="node ai">AI Client<div class="node-sub">Claude / Cursor</div></div>
+    <div class="arrow"><div class="arrow-label">MCP</div><div class="arrow-line"></div><div class="arrow-head">▶</div></div>
+    <div class="node mcp">semp-mcp<div class="node-sub">this server</div></div>
+    <div class="arrow"><div class="arrow-label">SEMP v2</div><div class="arrow-line"></div><div class="arrow-head">▶</div></div>
+    <div class="node broker">Solace Broker<div class="node-sub">Cloud / Software</div></div>
+  </div>
+</div>
