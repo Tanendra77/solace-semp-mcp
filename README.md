@@ -124,6 +124,62 @@ Collect coverage:
 npm run test:coverage
 ```
 
+## Docker
+
+### Quick start (SSE mode)
+
+```bash
+docker run -d -p 3000:3000 \
+  -e SEMP_BROKER_MY_BROKER_URL=http://your-solace-host:8080 \
+  -e SEMP_BROKER_MY_BROKER_USERNAME=admin \
+  -e SEMP_BROKER_MY_BROKER_PASSWORD=admin \
+  -e SEMP_BROKER_MY_BROKER_LABEL="My Broker" \
+  <DOCKER_HUB_USERNAME>/solace-semp-mcp:latest
+```
+
+Health check: `curl http://localhost:3000/health`
+
+### Using docker compose
+
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+To load brokers from a file instead of env vars, uncomment the `brokers.json` volume mount in `docker-compose.yml`.
+
+### stdio mode (for Claude Desktop / Claude Code via docker)
+
+```bash
+docker run -i --rm \
+  -e MCP_TRANSPORT=stdio \
+  --no-healthcheck \
+  <DOCKER_HUB_USERNAME>/solace-semp-mcp:latest
+```
+
+The `--no-healthcheck` flag is required in stdio mode because the HTTP server is not started and the built-in health check would otherwise mark the container as unhealthy. Requires Docker Engine 25.0+; use `--health-cmd=none` on older versions.
+
+### Building locally
+
+```bash
+docker build -t solace-semp-mcp:dev .
+```
+
+Pass `--build-arg VERSION=1.0.0` to set the `org.opencontainers.image.version` label.
+
+### Publishing (automated)
+
+The GitHub Actions workflow at `.github/workflows/docker-publish.yml` builds and pushes a multi-platform image (`linux/amd64`, `linux/arm64`) to Docker Hub automatically when you push a version tag:
+
+```bash
+git tag v1.0.0
+git push --tags
+```
+
+Requires `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets to be configured.
+
 ## Running The Server
 
 ### stdio mode
