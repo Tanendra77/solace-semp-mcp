@@ -9,6 +9,6 @@ tests/**/*.js.map
 tests/**/*.d.ts
 # /tests
 brokers.json
+logs
 *.log
-brokers.json
 CLAUDE.md
