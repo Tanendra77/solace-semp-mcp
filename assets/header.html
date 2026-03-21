@@ -44,6 +44,23 @@
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
   }
   .icon-wrap svg { width: 36px; height: 36px; }
+  .icon-wrap .solly-pang { width: 48px; height: 48px; object-fit: contain; }
+  .gh-link {
+    position: absolute;
+    bottom: 14px;
+    right: 18px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #8b949e;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-decoration: none;
+    transition: color 0.18s;
+  }
+  .gh-link:hover { color: #f0f6fc; }
+  .gh-link svg { width: 15px; height: 15px; fill: currentColor; }
   h1 {
     position: relative;
     z-index: 1;
@@ -165,23 +182,22 @@
 <div class="hero">
   <div class="grid-bg"></div>
   <div class="icon-wrap">
-    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="10" width="28" height="5" rx="2.5" fill="#00C895" opacity=".9"/>
-      <rect x="4" y="18" width="20" height="5" rx="2.5" fill="#00C895" opacity=".6"/>
-      <rect x="4" y="26" width="14" height="5" rx="2.5" fill="#00C895" opacity=".35"/>
-      <circle cx="29" cy="28.5" r="5" fill="#3C3489" opacity=".9"/>
-      <path d="M27 28.5h4M29 26.5v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
+    <img class="solly-pang" src="solly-logo.png" alt="Solly" />
   </div>
   <h1>solace-<span>semp</span>-mcp</h1>
   <div class="mono">// model context protocol · solace semp v2</div>
   <p class="tagline">Manage Solace PubSub+ brokers through natural language. Configure VPNs, inspect queues, and control your messaging infrastructure through AI.</p>
   <div class="badges">
-    <span class="badge green"><span class="dot"></span>MCP Compatible</span>
-    <span class="badge purple"><span class="dot"></span>SEMP v2</span>
+    <span class="badge green"><span class="dot"></span>SAM Compatible</span>
+    <span class="badge gray"><span class="dot"></span>SEMP v2</span>
     <span class="badge blue"><span class="dot"></span>Node.js 20+</span>
-    <span class="badge amber"><span class="dot"></span>MIT License</span>
-    <span class="badge gray"><span class="dot"></span>TypeScript</span>
+    <span class="badge blue"><span class="dot"></span>Docker</span>
+    <span class="badge purple"><span class="dot"></span>TypeScript</span>
+  </div>
+  <div class="badges">
+    <span class="badge green"><span class="dot"></span>stdio</span>
+    <span class="badge blue"><span class="dot"></span>SSE</span>
+    <span class="badge amber"><span class="dot"></span>HTTP</span>
   </div>
   <div class="arch">
     <div class="node ai">AI Client<div class="node-sub">Claude / Cursor</div></div>
@@ -190,4 +206,8 @@
     <div class="arrow"><div class="arrow-label">SEMP v2</div><div class="arrow-line"></div><div class="arrow-head">▶</div></div>
     <div class="node broker">Solace Broker<div class="node-sub">Cloud / Software</div></div>
   </div>
+  <a class="gh-link" href="https://github.com/Tanendra77" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    Tanendra77
+  </a>
 </div>
