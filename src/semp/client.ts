@@ -12,6 +12,7 @@ export class SempClient {
   }
 
   async request<T = unknown>(options: SempRequestOptions): Promise<SempResponse<T>> {
+    if (/\.\./.test(options.path)) throw new Error('Invalid path: ".." segments are not allowed.');
     const url = `${this.broker.url}/SEMP/v2/${options.api}${options.path}`;
     try {
       const response = await axios.request<{ data: T; meta?: SempResponse['meta'] }>({

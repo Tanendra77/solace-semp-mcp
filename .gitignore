@@ -11,3 +11,4 @@ tests/**/*.d.ts
 brokers.json
 *.log
 brokers.json
+CLAUDE.md

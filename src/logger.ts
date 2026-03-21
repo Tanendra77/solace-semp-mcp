@@ -7,7 +7,9 @@ function getDateSuffix(): string {
 }
 
 export function createLogger(): winston.Logger {
-  const level = process.env['LOG_LEVEL'] === 'debug' ? 'debug' : 'info';
+  const validLevels = ['error', 'warn', 'info', 'debug'];
+  const envLevel = process.env['LOG_LEVEL'] ?? '';
+  const level = validLevels.includes(envLevel) ? envLevel : 'info';
   const logDir = 'logs';
   const transports: winston.transport[] = [
     new winston.transports.Console({ format: winston.format.combine(winston.format.colorize(), winston.format.simple()) }),

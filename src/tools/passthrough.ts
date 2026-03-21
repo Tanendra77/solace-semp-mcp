@@ -42,14 +42,24 @@ export async function handleSempRequest(
 export function registerPassthroughTool(server: McpServer, registry: BrokerRegistry): void {
   const mode = process.env['SEMP_PASSTHROUGH_MODE'] ?? 'advanced';
   if (mode === 'disabled') return;
+  const apiSchema = mode === 'monitor_only'
+    ? z.enum(['monitor'] as const)
+    : z.enum(['monitor', 'config', 'action'] as const);
+  const methodSchema = mode === 'monitor_only'
+    ? z.enum(['GET'] as const)
+    : z.enum(['GET', 'POST', 'PATCH', 'PUT', 'DELETE'] as const);
+
   server.tool('semp_request',
     `Advanced escape hatch — raw SEMP call. Mode: ${mode}. ` +
     (mode === 'monitor_only' ? 'Only GET to monitor API allowed.' : 'Full access to all SEMP APIs.') +
     ' POST to action endpoints may be irreversible — review dry_run carefully.',
     {
-      broker: z.string(), api: z.enum(['monitor', 'config', 'action']),
-      method: z.enum(['GET', 'POST', 'PATCH', 'PUT', 'DELETE']),
-      path: z.string().describe('Path after /SEMP/v2/{api}, e.g. "/msgVpns/default/queues"'),
+      broker: z.string(),
+      api: apiSchema,
+      method: methodSchema,
+      path: z.string()
+        .refine(v => !v.includes('..'), 'Path must not contain ".." segments')
+        .describe('Path after /SEMP/v2/{api}, e.g. "/msgVpns/default/queues"'),
       body: z.unknown().optional(),
       confirm: z.boolean().default(false),
     },

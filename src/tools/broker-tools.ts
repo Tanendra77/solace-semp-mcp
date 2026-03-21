@@ -52,7 +52,13 @@ export function registerBrokerTools(server: McpServer, registry: BrokerRegistry)
   server.tool('list_brokers', 'List all registered brokers — name, label, url only. Credentials never exposed.', {},
     async () => ({ content: [{ type: 'text', text: await handleListBrokers(registry) }] }));
   server.tool('add_broker', 'Register a broker in-memory (lost on restart).',
-    { name: z.string(), label: z.string(), url: z.string().url(), username: z.string(), password: z.string() },
+    {
+      name: z.string(),
+      label: z.string(),
+      url: z.string().url().refine(v => /^https?:\/\//i.test(v), 'Broker URL must use http or https'),
+      username: z.string(),
+      password: z.string(),
+    },
     async (p) => ({ content: [{ type: 'text', text: await handleAddBroker(registry, p) }] }));
   server.tool('remove_broker', 'Remove a broker from registry. dry_run by default — set confirm: true to execute.',
     { name: z.string(), confirm: z.boolean().default(false) },

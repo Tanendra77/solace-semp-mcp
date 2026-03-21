@@ -8,9 +8,11 @@ import { BrokerRegistry } from '../brokers/registry';
 
 function timingSafeEqual(a: string, b: string): boolean {
   try {
-    const ab = Buffer.from(a);
-    const bb = Buffer.from(b);
-    if (ab.length !== bb.length) return false;
+    const maxLen = Math.max(Buffer.byteLength(a), Buffer.byteLength(b));
+    const ab = Buffer.alloc(maxLen);
+    const bb = Buffer.alloc(maxLen);
+    ab.write(a);
+    bb.write(b);
     return crypto.timingSafeEqual(ab, bb);
   } catch {
     return false;
@@ -25,7 +27,12 @@ export async function startSseTransport(server: McpServer, registry: BrokerRegis
   const rawRateLimit = parseInt(process.env['MCP_RATE_LIMIT_RPS'] ?? '10', 10);
   const rateLimit = isNaN(rawRateLimit) ? 10 : rawRateLimit;
 
-  app.use(cors());
+  const corsOrigin = process.env['CORS_ORIGIN'];
+  if (corsOrigin) {
+    app.use(cors({
+      origin: corsOrigin === '*' ? '*' : corsOrigin.split(',').map(o => o.trim()),
+    }));
+  }
   app.use(express.json());
 
   if (apiKey) {
@@ -50,7 +57,7 @@ export async function startSseTransport(server: McpServer, registry: BrokerRegis
 
   app.use((req, res, next) => {
     if (req.path === '/health') return next();
-    const sid = (req.headers['x-session-id'] as string) ?? req.ip ?? 'default';
+    const sid = req.ip ?? 'default';
     const now = Date.now();
     const entry = sessionCounts.get(sid);
     if (!entry || now > entry.resetAt) { sessionCounts.set(sid, { count: 1, resetAt: now + 1000 }); return next(); }
@@ -77,7 +84,9 @@ export async function startSseTransport(server: McpServer, registry: BrokerRegis
 
   app.post('/messages', async (req, res, next) => {
     try {
-      const sessionId = req.query['sessionId'] as string;
+      const raw = req.query['sessionId'];
+      const sessionId = typeof raw === 'string' ? raw : undefined;
+      if (!sessionId) { res.status(400).json({ error: 'Missing sessionId' }); return; }
       const transport = transports.get(sessionId);
       if (!transport) { res.status(404).json({ error: 'Session not found' }); return; }
       await transport.handlePostMessage(req, res);
