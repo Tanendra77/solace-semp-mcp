@@ -16,7 +16,7 @@ npm install
 npm run build
 ```
 
-The deployable runtime artifact is [dist](./dist).
+The deployable runtime artifact is [dist](../dist).
 
 ## Configuration
 

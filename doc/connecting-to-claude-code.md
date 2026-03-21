@@ -8,7 +8,7 @@ This guide explains how to connect the Solace SEMP MCP server to Claude Code so 
 - Node.js 20+
 - This repository cloned and dependencies installed
 
-## Step 1 — Build the server
+## Step 1 - Build the server
 
 ```bash
 cd solace-semp-mcp
@@ -16,7 +16,7 @@ npm install
 npm run build
 ```
 
-## Step 2 — Register with Claude Code
+## Step 2 - Register with Claude Code
 
 From the repository directory, run:
 
@@ -30,17 +30,17 @@ Verify it registered correctly:
 claude mcp list
 ```
 
-You should see `solace-semp: node dist/index.js - ✓ Connected`.
+You should see `solace-semp: node dist/index.js - Connected`.
 
-## Step 3 — Start a new conversation
+## Step 3 - Start a new conversation
 
 MCP tools only become available in sessions started **after** registration. Close and reopen Claude Code, or start a new conversation.
 
-## Step 4 — Add your broker
+## Step 4 - Add your broker
 
 You have two options:
 
-### Option A — Dynamically (in-session only)
+### Option A - Dynamically (in-session only)
 
 Ask Claude to add your broker:
 
@@ -48,7 +48,7 @@ Ask Claude to add your broker:
 
 Claude will call the `add_broker` tool. The broker is available for the rest of the session but **does not persist** across restarts.
 
-### Option B — Permanently via `brokers.json`
+### Option B - Permanently via `brokers.json`
 
 Create `brokers.json` in the repository root (it is gitignored):
 
@@ -70,7 +70,7 @@ The broker is loaded automatically every time the MCP server starts.
 
 > Default SEMP port is **8080** (HTTP) or **943** (HTTPS).
 
-## Step 5 — Test it
+## Step 5 - Test it
 
 Try asking Claude:
 
