@@ -1,0 +1,11 @@
+  {                                                                                                                                    
+    "brokers": [                                                                                                                       
+      {                                                                                                                                
+        "name": "dev-broker",                                                                                                          
+        "label": "Dev Broker",                                                                                                         
+        "url": "http://your-solace-host:8080",                                                                                         
+        "username": "admin",                                                                                                           
+        "password": "admin"                                                                                                            
+      }                                                                                                                                
+    ]                                                                                                                                  
+  }       

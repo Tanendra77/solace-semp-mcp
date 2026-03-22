@@ -1,0 +1,1 @@
+{"version":3,"file":"stdio.js","sourceRoot":"","sources":["../../src/transport/stdio.ts"],"names":[],"mappings":";;AAIA,kDAIC;AAPD,wEAAiF;AACjF,sCAAmC;AAE5B,KAAK,UAAU,mBAAmB,CAAC,MAAiB;IACzD,MAAM,SAAS,GAAG,IAAI,+BAAoB,EAAE,CAAC;IAC7C,MAAM,MAAM,CAAC,MAAM,CAAC,OAAO,CAAC,SAAS,CAAC,CAAC;IACvC,eAAM,CAAC,IAAI,CAAC,uCAAuC,CAAC,CAAC;AACvD,CAAC"}

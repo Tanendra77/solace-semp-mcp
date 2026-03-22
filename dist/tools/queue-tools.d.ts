@@ -1,0 +1,13 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { BrokerRegistry } from '../brokers/registry';
+export declare function handleListQueues(registry: BrokerRegistry, brokerName: string, vpn: string, limit: number, cursor?: string): Promise<string>;
+export declare function handleGetQueueStats(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string): Promise<string>;
+export declare function handleListQueueSubscriptions(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, limit: number, cursor?: string): Promise<string>;
+export declare function handleListQueueConsumers(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string): Promise<string>;
+export declare function handleListQueueMessages(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, maxMessages: number): Promise<string>;
+export declare function handleGetQueueConfig(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string): Promise<string>;
+export declare function handleCreateQueue(registry: BrokerRegistry, brokerName: string, vpn: string, config: Record<string, unknown>, confirm: boolean): Promise<string>;
+export declare function handleUpdateQueueConfig(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, config: Record<string, unknown>, confirm: boolean): Promise<string>;
+export declare function handleDeleteQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean): Promise<string>;
+export declare function handleClearQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean): Promise<string>;
+export declare function registerQueueTools(server: McpServer, registry: BrokerRegistry): void;

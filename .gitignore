@@ -3,3 +3,12 @@
 .env
 /node_modules
 /docs
+tests/**/*.js
+tests/**/*.js.map
+tests/**/*.d.ts
+/tests
+brokers.json
+logs
+*.log
+CLAUDE.md
+\__pycache__

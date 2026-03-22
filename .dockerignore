@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.git/
+.github/
+logs/
+brokers.json
+.env*
+tests/
+*.md
+docs/
+doc/
