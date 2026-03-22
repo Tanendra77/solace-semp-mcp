@@ -134,7 +134,7 @@ docker run -d -p 3000:3000 \
   -e SEMP_BROKER_MY_BROKER_USERNAME=admin \
   -e SEMP_BROKER_MY_BROKER_PASSWORD=admin \
   -e SEMP_BROKER_MY_BROKER_LABEL="My Broker" \
-  <DOCKER_HUB_USERNAME>/solace-semp-mcp:latest
+  tanendra/solace-semp-mcp:latest
 ```
 
 Health check: `curl http://localhost:3000/health`
@@ -148,6 +148,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
+`docker-compose.yml` forces `MCP_TRANSPORT=sse` so the service stays compatible with its HTTP health check even if `.env` still has `MCP_TRANSPORT=stdio`.
+
 To load brokers from a file instead of env vars, uncomment the `brokers.json` volume mount in `docker-compose.yml`.
 
 ### stdio mode (for Claude Desktop / Claude Code via docker)
@@ -156,7 +158,7 @@ To load brokers from a file instead of env vars, uncomment the `brokers.json` vo
 docker run -i --rm \
   -e MCP_TRANSPORT=stdio \
   --no-healthcheck \
-  <DOCKER_HUB_USERNAME>/solace-semp-mcp:latest
+  tanendra/solace-semp-mcp:latest
 ```
 
 The `--no-healthcheck` flag is required in stdio mode because the HTTP server is not started and the built-in health check would otherwise mark the container as unhealthy. Requires Docker Engine 25.0+; use `--health-cmd=none` on older versions.
@@ -267,6 +269,7 @@ Additional repository docs:
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
 - [VERSIONING.md](./VERSIONING.md)
 - [DEPLOYMENT.md](./doc/DEPLOYMENT.md)
+- [docker.md](./doc/docker.md)
 - [connecting-to-claude-code.md](./doc/connecting-to-claude-code.md)
 - [tools-reference.md](./doc/tools-reference.md)
 - [LICENSE](./LICENSE)

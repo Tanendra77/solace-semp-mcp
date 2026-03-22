@@ -102,19 +102,26 @@ WantedBy=multi-user.target
 
 ## Container Deployment
 
-This repo does not currently include a `Dockerfile`, but it is straightforward to containerize:
+The repo includes a production-ready Docker setup:
 
-1. Install dependencies
-2. Build the project
-3. Copy `dist/`, `package.json`, and production dependencies
-4. Start with `node dist/index.js`
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage image (builder + runtime on node:20-alpine) |
+| `.dockerignore` | Excludes credentials, build artifacts, and dev files |
+| `docker-compose.yml` | SSE-mode deployment with env file and log volume |
+| `.github/workflows/docker-publish.yml` | Auto-publishes to Docker Hub on `v*.*.*` tag push |
 
-If you want container deployment to be first-class, add:
+See [doc/docker.md](./docker.md) for the full Docker guide covering local builds, transport modes, broker configuration, and CI/CD publishing.
 
-- a `Dockerfile`
-- `.dockerignore`
-- runtime env documentation
-- healthcheck configuration
+Quick start:
+
+```bash
+cp .env.example .env          # add broker credentials to .env
+docker compose up -d          # starts in SSE mode on port 3000
+curl http://localhost:3000/health
+```
+
+`docker-compose.yml` explicitly sets `MCP_TRANSPORT=sse`, so the compose deployment remains healthy even if `.env` still contains the local-development default `MCP_TRANSPORT=stdio`.
 
 ## Reverse Proxy
 
