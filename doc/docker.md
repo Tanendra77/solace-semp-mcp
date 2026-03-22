@@ -185,6 +185,8 @@ All variables are passed at runtime via `-e` flags or the `.env` file. No secret
 | `PORT` | `3000` | HTTP port (SSE mode only) |
 | `MCP_API_KEY` | — | Bearer token to protect SSE endpoints |
 | `MCP_RATE_LIMIT_RPS` | `10` | Requests per second per IP (SSE mode) |
+| `MCP_MAX_SESSIONS` | `100` | Max concurrent SSE connections (SSE mode) |
+| `TRUST_PROXY` | — | Set to `1` when behind Nginx/Traefik so rate-limiting uses real client IP |
 | `CORS_ORIGIN` | — | Allowed CORS origins (`*` or comma-separated) |
 | `SEMP_TIMEOUT_MS` | `10000` | Upstream SEMP HTTP timeout (ms) |
 | `SEMP_PASSTHROUGH_MODE` | `advanced` | `disabled`, `monitor_only`, or `advanced` |
