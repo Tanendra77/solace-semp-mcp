@@ -15,6 +15,20 @@ describe('handleSempRequest', () => {
     const r = await handleSempRequest(registry, 'test', 'monitor', 'GET', '/msgVpns', undefined, false);
     expect(r).not.toContain('[DRY RUN]');
   });
+  it('GET includes meta.paging when nextPageUri is present', async () => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({
+      data: [{ name: 'q1' }],
+      meta: { paging: { nextPageUri: '/SEMP/v2/monitor/msgVpns/TRADE/queues?count=1&cursor=abc123' } },
+    });
+    const r = await handleSempRequest(registry, 'test', 'monitor', 'GET', '/msgVpns/TRADE/queues?count=1', undefined, false);
+    const parsed = JSON.parse(r);
+    expect(parsed.meta.paging.nextPageUri).toContain('cursor=abc123');
+  });
+  it('GET omits meta when no paging', async () => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ name: 'q1' }], meta: {} });
+    const r = await handleSempRequest(registry, 'test', 'monitor', 'GET', '/msgVpns/TRADE/queues', undefined, false);
+    expect(r).not.toContain('"meta"');
+  });
   it('DELETE returns dry_run without confirm', async () => {
     const r = await handleSempRequest(registry, 'test', 'config', 'DELETE', '/x', undefined, false);
     expect(r).toContain('[DRY RUN]');

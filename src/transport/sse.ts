@@ -26,6 +26,14 @@ export async function startSseTransport(server: McpServer, registry: BrokerRegis
   const apiKey = process.env['MCP_API_KEY'];
   const rawRateLimit = parseInt(process.env['MCP_RATE_LIMIT_RPS'] ?? '10', 10);
   const rateLimit = isNaN(rawRateLimit) ? 10 : rawRateLimit;
+  const rawMaxSessions = parseInt(process.env['MCP_MAX_SESSIONS'] ?? '100', 10);
+  const maxSessions = isNaN(rawMaxSessions) ? 100 : rawMaxSessions;
+
+  // Trust proxy: required when running behind Nginx/Traefik so req.ip reflects the real
+  // client IP rather than the proxy address. Without this, all clients behind a proxy
+  // share one rate-limit bucket. Enable by setting TRUST_PROXY=1 in the environment.
+  const trustProxy = process.env['TRUST_PROXY'];
+  if (trustProxy === '1' || trustProxy === 'true') app.set('trust proxy', 1);
 
   const corsOrigin = process.env['CORS_ORIGIN'];
   if (corsOrigin) {
@@ -72,6 +80,9 @@ export async function startSseTransport(server: McpServer, registry: BrokerRegis
 
   app.get('/sse', async (req, res, next) => {
     try {
+      if (transports.size >= maxSessions) {
+        res.status(503).json({ error: 'Too many concurrent sessions. Try again later.' }); return;
+      }
       const transport = new SSEServerTransport('/messages', res);
       transports.set(transport.sessionId, transport);
       await server.server.connect(transport);

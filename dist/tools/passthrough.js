@@ -27,8 +27,12 @@ async function handleSempRequest(registry, brokerName, api, method, path, body, 
     const result = await new client_1.SempClient(broker).request({
         api, method: method.toUpperCase(), path, body,
     });
-    if (tier === confirmation_1.RiskTier.READ)
+    if (tier === confirmation_1.RiskTier.READ) {
+        if (result.meta?.paging?.nextPageUri) {
+            return JSON.stringify({ data: result.data, meta: { paging: result.meta.paging } }, null, 2);
+        }
         return JSON.stringify(result.data, null, 2);
+    }
     return (0, confirmation_1.buildExecutedResponse)(broker.name, broker.label, `${method.toUpperCase()} ${path}`, '200 OK') +
         '\n\n' + JSON.stringify(result.data, null, 2);
 }

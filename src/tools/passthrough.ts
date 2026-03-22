@@ -34,7 +34,12 @@ export async function handleSempRequest(
     api, method: method.toUpperCase() as 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', path, body,
   });
 
-  if (tier === RiskTier.READ) return JSON.stringify(result.data, null, 2);
+  if (tier === RiskTier.READ) {
+    if (result.meta?.paging?.nextPageUri) {
+      return JSON.stringify({ data: result.data, meta: { paging: result.meta.paging } }, null, 2);
+    }
+    return JSON.stringify(result.data, null, 2);
+  }
   return buildExecutedResponse(broker.name, broker.label, `${method.toUpperCase()} ${path}`, '200 OK') +
     '\n\n' + JSON.stringify(result.data, null, 2);
 }

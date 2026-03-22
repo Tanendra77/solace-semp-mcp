@@ -28,7 +28,7 @@ function loadBrokersFromFile(filePath) {
                 brokers.push({ name: entry.name, label: entry.label ?? entry.name, url: entry.url, username: entry.username, password: entry.password });
             }
             else {
-                logger_1.logger.warn(`Skipping invalid broker entry in brokers.json: ${JSON.stringify(entry)}`);
+                logger_1.logger.warn(`Skipping invalid broker entry in brokers.json: name=${entry?.name ?? '(missing)'}, url=${entry?.url ?? '(missing)'}`);
             }
         }
         logger_1.logger.info(`Loaded ${brokers.length} broker(s) from ${resolved}`);

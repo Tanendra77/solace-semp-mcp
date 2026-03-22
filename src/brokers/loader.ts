@@ -18,7 +18,7 @@ export function loadBrokersFromFile(filePath: string): Broker[] {
           typeof entry.username === 'string' && typeof entry.password === 'string') {
         brokers.push({ name: entry.name, label: entry.label ?? entry.name, url: entry.url, username: entry.username, password: entry.password });
       } else {
-        logger.warn(`Skipping invalid broker entry in brokers.json: ${JSON.stringify(entry)}`);
+        logger.warn(`Skipping invalid broker entry in brokers.json: name=${entry?.name ?? '(missing)'}, url=${entry?.url ?? '(missing)'}`);
       }
     }
     logger.info(`Loaded ${brokers.length} broker(s) from ${resolved}`);
