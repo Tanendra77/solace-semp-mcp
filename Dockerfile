@@ -28,15 +28,16 @@ VOLUME /app/logs
 LABEL org.opencontainers.image.title="solace-semp-mcp"
 LABEL org.opencontainers.image.description="MCP server for Solace PubSub+ SEMP API"
 LABEL org.opencontainers.image.version="${VERSION}"
-LABEL org.opencontainers.image.source="https://github.com/yourusername/solace-semp-mcp"
+LABEL org.opencontainers.image.source="https://github.com/Tanendra77/solace-semp-mcp"
 LABEL org.opencontainers.image.licenses="MIT"
 
-ENV MCP_TRANSPORT=sse
+ENV NODE_ENV=production \
+    MCP_TRANSPORT=sse
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 USER node
 CMD ["node", "dist/index.js"]
