@@ -11,7 +11,7 @@ This document lists every MCP tool exposed by this server, the SEMP endpoint it 
 - `config` — persistent configuration (create/update/delete objects)
 - `action` — one-shot operations that are not configuration changes (disconnect, purge)
 
-**Pagination.** Read tools that return lists accept `limit` and `offset`. When there are more results than `limit`, the response appends a `Use offset=N for the next page` hint.
+**Pagination.** Read tools that return lists accept `limit` and `cursor`. When there are more results than `limit`, the response appends a `Use cursor="..." for the next page` hint. Pass the cursor back on the next call to advance the page.
 
 **Diagnostic tools.** These fetch a full queue list from the monitor API and filter/rank client-side. They do not call a dedicated SEMP diagnostic endpoint.
 
@@ -81,8 +81,8 @@ Read-only broker and VPN health tools.
 
 | # | Tool | SEMP endpoint | Tier |
 |---|------|---------------|------|
-| 29 | `list_acl_profiles` | `GET /SEMP/v2/monitor/msgVpns/{vpn}/aclProfiles` | READ — paginated |
-| 30 | `get_acl_profile` | `GET /SEMP/v2/monitor/msgVpns/{vpn}/aclProfiles/{name}` | READ |
+| 29 | `list_acl_profiles` | `GET /SEMP/v2/config/msgVpns/{vpn}/aclProfiles` | READ — paginated |
+| 30 | `get_acl_profile` | `GET /SEMP/v2/config/msgVpns/{vpn}/aclProfiles/{name}` | READ |
 | 31 | `create_acl_profile` | `POST /SEMP/v2/config/msgVpns/{vpn}/aclProfiles` | WRITE — dry-run by default |
 | 32 | `update_acl_profile` | `PATCH /SEMP/v2/config/msgVpns/{vpn}/aclProfiles/{name}` | WRITE — dry-run by default |
 | 33 | `delete_acl_profile` | `DELETE /SEMP/v2/config/msgVpns/{vpn}/aclProfiles/{name}` | DELETE — dry-run by default |
@@ -93,8 +93,8 @@ Read-only broker and VPN health tools.
 
 | # | Tool | SEMP endpoint | Tier |
 |---|------|---------------|------|
-| 34 | `list_client_usernames` | `GET /SEMP/v2/monitor/msgVpns/{vpn}/clientUsernames` | READ — paginated |
-| 35 | `get_client_username` | `GET /SEMP/v2/monitor/msgVpns/{vpn}/clientUsernames/{name}` | READ |
+| 34 | `list_client_usernames` | `GET /SEMP/v2/config/msgVpns/{vpn}/clientUsernames` | READ — paginated |
+| 35 | `get_client_username` | `GET /SEMP/v2/config/msgVpns/{vpn}/clientUsernames/{name}` | READ |
 | 36 | `create_client_username` | `POST /SEMP/v2/config/msgVpns/{vpn}/clientUsernames` | WRITE — dry-run by default |
 | 37 | `update_client_username` | `PATCH /SEMP/v2/config/msgVpns/{vpn}/clientUsernames/{name}` | WRITE — dry-run by default |
 | 38 | `delete_client_username` | `DELETE /SEMP/v2/config/msgVpns/{vpn}/clientUsernames/{name}` | DELETE — dry-run by default |
@@ -105,8 +105,8 @@ Read-only broker and VPN health tools.
 
 | # | Tool | SEMP endpoint | Tier |
 |---|------|---------------|------|
-| 39 | `list_client_profiles` | `GET /SEMP/v2/monitor/msgVpns/{vpn}/clientProfiles` | READ — paginated |
-| 40 | `get_client_profile` | `GET /SEMP/v2/monitor/msgVpns/{vpn}/clientProfiles/{name}` | READ |
+| 39 | `list_client_profiles` | `GET /SEMP/v2/config/msgVpns/{vpn}/clientProfiles` | READ — paginated |
+| 40 | `get_client_profile` | `GET /SEMP/v2/config/msgVpns/{vpn}/clientProfiles/{name}` | READ |
 | 41 | `create_client_profile` | `POST /SEMP/v2/config/msgVpns/{vpn}/clientProfiles` | WRITE — dry-run by default |
 | 42 | `update_client_profile` | `PATCH /SEMP/v2/config/msgVpns/{vpn}/clientProfiles/{name}` | WRITE — dry-run by default |
 | 43 | `delete_client_profile` | `DELETE /SEMP/v2/config/msgVpns/{vpn}/clientProfiles/{name}` | DELETE — dry-run by default |

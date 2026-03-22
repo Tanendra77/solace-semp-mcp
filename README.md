@@ -2,6 +2,14 @@
   <img src="./assets/header.png" alt="solace-semp-mcp header" width="100%" />
 </p>
 
+<p align="center">
+  <a href="./QUICKSTART.md">Quickstart</a> •
+  <a href="./doc/tools-reference.md">Tools Reference</a> •
+  <a href="./doc/connecting-to-claude-code.md">Connecting to Claude</a> •
+  <a href="./CONTRIBUTING.md">Contributing</a> •
+  <a href="./LICENSE">License</a>
+</p>
+
 ---
 
 ## Overview
@@ -264,14 +272,14 @@ Logs are written to the console and to the `logs/` directory. Increase `LOG_LEVE
 
 ## Documentation
 
-Additional repository docs:
-
-- [CONTRIBUTING.md](./CONTRIBUTING.md)
-- [VERSIONING.md](./VERSIONING.md)
-- [DEPLOYMENT.md](./doc/DEPLOYMENT.md)
-- [docker.md](./doc/docker.md)
-- [connecting-to-claude-code.md](./doc/connecting-to-claude-code.md)
-- [tools-reference.md](./doc/tools-reference.md)
+- [QUICKSTART.md](./QUICKSTART.md) — fastest path to getting started
+- [doc/connecting-to-claude-code.md](./doc/connecting-to-claude-code.md) — detailed Claude Code setup
+- [doc/tools-reference.md](./doc/tools-reference.md) — every tool, endpoint, and safety tier
+- [doc/docker.md](./doc/docker.md) — production Docker deployment
+- [doc/DEPLOYMENT.md](./doc/DEPLOYMENT.md) — general deployment notes
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — development and PR guidelines
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) — community standards
+- [VERSIONING.md](./VERSIONING.md) — release and versioning policy
 - [LICENSE](./LICENSE)
 
 ## Known Limitations
