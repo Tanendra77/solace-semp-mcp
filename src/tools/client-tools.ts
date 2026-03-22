@@ -4,13 +4,21 @@ import { BrokerRegistry } from '../brokers/registry';
 import { SempClient } from '../semp/client';
 import { RiskTier, buildDryRunResponse, buildExecutedResponse } from '../safety/confirmation';
 
-export async function handleListClients(registry: BrokerRegistry, brokerName: string, vpn: string, limit: number, offset: number): Promise<string> {
+function nextCursor(nextPageUri?: string): string | undefined {
+  if (!nextPageUri) return undefined;
+  try { return new URL(nextPageUri, 'http://x').searchParams.get('cursor') ?? undefined; }
+  catch { return undefined; }
+}
+
+export async function handleListClients(registry: BrokerRegistry, brokerName: string, vpn: string, limit: number, cursor?: string): Promise<string> {
   const broker = registry.getOrThrow(brokerName);
-  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/clients`, params: { count: limit } });
+  const params: Record<string, string | number> = { count: limit };
+  if (cursor) params['cursor'] = cursor;
+  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/clients`, params });
   const data = result.data as unknown[];
   let text = JSON.stringify(data, null, 2);
-  const total = result.meta?.count;
-  if (total !== undefined && total > limit) text += `\n\nReturned ${data.length} of ${total}. Use offset=${offset + limit} for the next page.`;
+  const next = nextCursor(result.meta?.paging?.nextPageUri);
+  if (next) text += `\n\nMore results available. Use cursor="${next}" for the next page.`;
   return text;
 }
 
@@ -20,23 +28,27 @@ export async function handleGetClientDetails(registry: BrokerRegistry, brokerNam
   return JSON.stringify(result.data, null, 2);
 }
 
-export async function handleListClientSubscriptions(registry: BrokerRegistry, brokerName: string, vpn: string, clientName: string, limit: number, offset: number): Promise<string> {
+export async function handleListClientSubscriptions(registry: BrokerRegistry, brokerName: string, vpn: string, clientName: string, limit: number, cursor?: string): Promise<string> {
   const broker = registry.getOrThrow(brokerName);
-  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/clients/${clientName}/subscriptions`, params: { count: limit } });
+  const params: Record<string, string | number> = { count: limit };
+  if (cursor) params['cursor'] = cursor;
+  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/clients/${clientName}/subscriptions`, params });
   const data = result.data as unknown[];
   let text = JSON.stringify(data, null, 2);
-  const total = result.meta?.count;
-  if (total !== undefined && total > limit) text += `\n\nReturned ${data.length} of ${total}. Use offset=${offset + limit} for the next page.`;
+  const next = nextCursor(result.meta?.paging?.nextPageUri);
+  if (next) text += `\n\nMore results available. Use cursor="${next}" for the next page.`;
   return text;
 }
 
-export async function handleListClientConnections(registry: BrokerRegistry, brokerName: string, vpn: string, username: string, limit: number, offset: number): Promise<string> {
+export async function handleListClientConnections(registry: BrokerRegistry, brokerName: string, vpn: string, username: string, limit: number, cursor?: string): Promise<string> {
   const broker = registry.getOrThrow(brokerName);
-  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/clientUsernames/${username}/connections`, params: { count: limit } });
+  const params: Record<string, string | number> = { count: limit };
+  if (cursor) params['cursor'] = cursor;
+  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/clientUsernames/${username}/connections`, params });
   const data = result.data as unknown[];
   let text = JSON.stringify(data, null, 2);
-  const total = result.meta?.count;
-  if (total !== undefined && total > limit) text += `\n\nReturned ${data.length} of ${total}. Use offset=${offset + limit} for the next page.`;
+  const next = nextCursor(result.meta?.paging?.nextPageUri);
+  if (next) text += `\n\nMore results available. Use cursor="${next}" for the next page.`;
   return text;
 }
 
@@ -70,17 +82,17 @@ export async function handleClearClientStats(registry: BrokerRegistry, brokerNam
 
 export function registerClientTools(server: McpServer, registry: BrokerRegistry): void {
   server.tool('list_clients', 'List connected clients on a VPN. Paginated.',
-    { broker: z.string(), vpn: z.string(), limit: z.number().int().min(1).max(500).default(50), offset: z.number().int().min(0).default(0) },
-    async ({ broker, vpn, limit, offset }) => ({ content: [{ type: 'text', text: await handleListClients(registry, broker, vpn, limit, offset) }] }));
+    { broker: z.string(), vpn: z.string(), limit: z.number().int().min(1).max(500).default(50), cursor: z.string().optional() },
+    async ({ broker, vpn, limit, cursor }) => ({ content: [{ type: 'text', text: await handleListClients(registry, broker, vpn, limit, cursor) }] }));
   server.tool('get_client_details', 'Detailed info for a specific client connection.',
     { broker: z.string(), vpn: z.string(), client_name: z.string() },
     async ({ broker, vpn, client_name }) => ({ content: [{ type: 'text', text: await handleGetClientDetails(registry, broker, vpn, client_name) }] }));
   server.tool('list_client_subscriptions', 'Topic subscriptions for a client. Paginated.',
-    { broker: z.string(), vpn: z.string(), client_name: z.string(), limit: z.number().int().min(1).max(500).default(50), offset: z.number().int().min(0).default(0) },
-    async ({ broker, vpn, client_name, limit, offset }) => ({ content: [{ type: 'text', text: await handleListClientSubscriptions(registry, broker, vpn, client_name, limit, offset) }] }));
+    { broker: z.string(), vpn: z.string(), client_name: z.string(), limit: z.number().int().min(1).max(500).default(50), cursor: z.string().optional() },
+    async ({ broker, vpn, client_name, limit, cursor }) => ({ content: [{ type: 'text', text: await handleListClientSubscriptions(registry, broker, vpn, client_name, limit, cursor) }] }));
   server.tool('list_client_connections', 'Connections for a client username. Paginated.',
-    { broker: z.string(), vpn: z.string(), username: z.string(), limit: z.number().int().min(1).max(500).default(50), offset: z.number().int().min(0).default(0) },
-    async ({ broker, vpn, username, limit, offset }) => ({ content: [{ type: 'text', text: await handleListClientConnections(registry, broker, vpn, username, limit, offset) }] }));
+    { broker: z.string(), vpn: z.string(), username: z.string(), limit: z.number().int().min(1).max(500).default(50), cursor: z.string().optional() },
+    async ({ broker, vpn, username, limit, cursor }) => ({ content: [{ type: 'text', text: await handleListClientConnections(registry, broker, vpn, username, limit, cursor) }] }));
   server.tool('disconnect_client', 'Force-disconnect a client. dry_run by default.',
     { broker: z.string(), vpn: z.string(), client_name: z.string(), confirm: z.boolean().default(false) },
     async ({ broker, vpn, client_name, confirm }) => ({ content: [{ type: 'text', text: await handleDisconnectClient(registry, broker, vpn, client_name, confirm) }] }));

@@ -10,7 +10,7 @@ beforeEach(() => { jest.clearAllMocks(); });
 describe('handleListAclProfiles', () => {
   it('returns JSON list', async () => {
     (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ aclProfileName: 'default' }], meta: { count: 1 } });
-    const r = await handleListAclProfiles(registry, 'test', 'default', 50, 0);
+    const r = await handleListAclProfiles(registry, 'test', 'default', 50);
     expect(r).toContain('aclProfileName');
   });
 });

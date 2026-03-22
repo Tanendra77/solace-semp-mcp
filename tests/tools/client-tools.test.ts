@@ -10,7 +10,7 @@ beforeEach(() => { jest.clearAllMocks(); });
 describe('handleListClients', () => {
   it('returns client list JSON', async () => {
     (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ clientName: 'cli1' }], meta: { count: 1 } });
-    const r = await handleListClients(registry, 'test', 'default', 50, 0);
+    const r = await handleListClients(registry, 'test', 'default', 50);
     expect(r).toContain('cli1');
   });
 });

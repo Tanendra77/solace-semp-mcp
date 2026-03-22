@@ -3,6 +3,12 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { BrokerRegistry } from '../brokers/registry';
 import { SempClient } from '../semp/client';
 
+function nextCursor(nextPageUri?: string): string | undefined {
+  if (!nextPageUri) return undefined;
+  try { return new URL(nextPageUri, 'http://x').searchParams.get('cursor') ?? undefined; }
+  catch { return undefined; }
+}
+
 export async function handleGetBrokerStats(registry: BrokerRegistry, brokerName: string): Promise<string> {
   const broker = registry.getOrThrow(brokerName);
   const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: '/about' });
@@ -31,18 +37,15 @@ export async function handleGetConfigSyncStatus(registry: BrokerRegistry, broker
   return JSON.stringify(result.data, null, 2);
 }
 
-export async function handleListVpns(registry: BrokerRegistry, brokerName: string, limit: number, offset: number): Promise<string> {
+export async function handleListVpns(registry: BrokerRegistry, brokerName: string, limit: number, cursor?: string): Promise<string> {
   const broker = registry.getOrThrow(brokerName);
-  const result = await new SempClient(broker).request({
-    api: 'monitor', method: 'GET', path: '/msgVpns',
-    params: offset > 0 ? { count: limit, cursor: String(offset) } : { count: limit },
-  });
+  const params: Record<string, string | number> = { count: limit };
+  if (cursor) params['cursor'] = cursor;
+  const result = await new SempClient(broker).request({ api: 'monitor', method: 'GET', path: '/msgVpns', params });
   const data = result.data as unknown[];
   let text = JSON.stringify(data, null, 2);
-  const total = result.meta?.count;
-  if (total !== undefined && total > limit) {
-    text += `\n\nReturned ${data.length} of ${total}. Use offset=${offset + limit} for the next page.`;
-  }
+  const next = nextCursor(result.meta?.paging?.nextPageUri);
+  if (next) text += `\n\nMore results available. Use cursor="${next}" for the next page.`;
   return text;
 }
 
@@ -66,8 +69,8 @@ export function registerMonitorTools(server: McpServer, registry: BrokerRegistry
     { broker: z.string() },
     async ({ broker }) => ({ content: [{ type: 'text', text: await handleGetConfigSyncStatus(registry, broker) }] }));
   server.tool('list_vpns', 'List message VPNs on the broker.',
-    { broker: z.string(), limit: z.number().int().min(1).max(500).default(50), offset: z.number().int().min(0).default(0) },
-    async ({ broker, limit, offset }) => ({ content: [{ type: 'text', text: await handleListVpns(registry, broker, limit, offset) }] }));
+    { broker: z.string(), limit: z.number().int().min(1).max(500).default(50), cursor: z.string().optional() },
+    async ({ broker, limit, cursor }) => ({ content: [{ type: 'text', text: await handleListVpns(registry, broker, limit, cursor) }] }));
   server.tool('get_vpn_stats', 'Detailed stats for a specific VPN.',
     { broker: z.string(), vpn: z.string() },
     async ({ broker, vpn }) => ({ content: [{ type: 'text', text: await handleGetVpnStats(registry, broker, vpn) }] }));

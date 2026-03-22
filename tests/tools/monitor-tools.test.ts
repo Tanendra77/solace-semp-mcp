@@ -18,15 +18,24 @@ describe('handleGetBrokerStats', () => {
 });
 
 describe('handleListVpns', () => {
-  it('includes pagination footer when total > limit', async () => {
-    (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ name: 'default' }], meta: { count: 500 } });
-    const r = await handleListVpns(registry, 'test', 50, 0);
-    expect(r).toContain('Use offset=50');
+  it('includes cursor hint when nextPageUri is present', async () => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({
+      data: [{ name: 'default' }],
+      meta: { paging: { nextPageUri: '/SEMP/v2/monitor/msgVpns?count=50&cursor=abc123' } },
+    });
+    const r = await handleListVpns(registry, 'test', 50);
+    expect(r).toContain('cursor="abc123"');
   });
-  it('no footer when count fits in limit', async () => {
-    (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ name: 'default' }], meta: { count: 1 } });
-    const r = await handleListVpns(registry, 'test', 50, 0);
-    expect(r).not.toContain('offset=');
+  it('no footer when nextPageUri is absent', async () => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ name: 'default' }], meta: {} });
+    const r = await handleListVpns(registry, 'test', 50);
+    expect(r).not.toContain('cursor=');
+  });
+  it('passes cursor to SEMP when provided', async () => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [], meta: {} });
+    await handleListVpns(registry, 'test', 50, 'abc123');
+    const call = (SempClient.prototype.request as jest.Mock).mock.calls[0][0];
+    expect(call.params).toMatchObject({ cursor: 'abc123' });
   });
 });
 

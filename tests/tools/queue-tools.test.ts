@@ -23,13 +23,13 @@ describe('handleDeleteQueue', () => {
 describe('handleListQueueMessages', () => {
   it('caps max_messages at 100', async () => {
     (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [] });
-    await handleListQueueMessages(registry, 'test', 'default', 'q', 999, 0);
+    await handleListQueueMessages(registry, 'test', 'default', 'q', 999);
     expect((SempClient.prototype.request as jest.Mock).mock.calls[0][0].params.count).toBe(100);
   });
   it('truncates long payloads', async () => {
     const longPayload = 'x'.repeat(3000);
     (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: [{ payload: longPayload }] });
-    const r = await handleListQueueMessages(registry, 'test', 'default', 'q', 10, 0);
+    const r = await handleListQueueMessages(registry, 'test', 'default', 'q', 10);
     const parsed = JSON.parse(r);
     expect(parsed[0].payload_truncated).toBe(true);
   });
