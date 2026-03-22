@@ -17,7 +17,7 @@ The recommended path for using the server with Claude Code on your local machine
 **1. Clone and install**
 
 ```bash
-git clone https://github.com/SiddheshPaithankar/solace-semp-mcp.git
+git clone https://github.com/Tanendra77/solace-semp-mcp.git
 cd solace-semp-mcp
 npm install
 ```
