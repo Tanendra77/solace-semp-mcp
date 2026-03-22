@@ -4,7 +4,7 @@ All notable changes to this project will be documented here. This project follow
 
 ---
 
-## [1.0.0] — 2026-03-22
+## [1.0.0](https://github.com/Tanendra77/solace-semp-mcp/releases/tag/v1.0.0) — 2026-03-22
 
 Initial release.
 

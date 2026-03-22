@@ -285,6 +285,12 @@ Logs are written to the console and to the `logs/` directory. Increase `LOG_LEVE
 - [VERSIONING.md](./VERSIONING.md) — release and versioning policy
 - [LICENSE](./LICENSE)
 
+## Releases
+
+| Version | Date | Notes |
+|---------|------|-------|
+| [v1.0.0](https://github.com/Tanendra77/solace-semp-mcp/releases/tag/v1.0.0) | 2026-03-22 | Initial release — 47 tools, stdio + SSE transports |
+
 ## Known Limitations
 
 - SSE transport currently behaves as a single active MCP server session implementation; `stdio` is the safer default for local usage.
