@@ -136,6 +136,8 @@ npm run test:coverage
 
 ### Quick start (SSE mode)
 
+Image on Docker Hub: [tanendra/solace-semp-mcp](https://hub.docker.com/r/tanendra/solace-semp-mcp)
+
 ```bash
 docker run -d -p 3000:3000 \
   -e SEMP_BROKER_MY_BROKER_URL=http://your-solace-host:8080 \
@@ -279,6 +281,7 @@ Logs are written to the console and to the `logs/` directory. Increase `LOG_LEVE
 - [doc/DEPLOYMENT.md](./doc/DEPLOYMENT.md) — general deployment notes
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — development and PR guidelines
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) — community standards
+- [CHANGELOG.md](./CHANGELOG.md) — release history and feature list
 - [VERSIONING.md](./VERSIONING.md) — release and versioning policy
 - [LICENSE](./LICENSE)
 
