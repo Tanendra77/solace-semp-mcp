@@ -2,11 +2,35 @@
 
 This guide explains how to connect the Solace SEMP MCP server to Claude Code so you can manage your Solace brokers through natural language.
 
-## Prerequisites
+---
 
-- [Claude Code](https://claude.ai/code) installed
-- Node.js 20+
-- This repository cloned and dependencies installed
+## Option A — Docker (recommended, no clone needed)
+
+The fastest path. One command registers the server globally — available in every project directory.
+
+**Prerequisites:** [Claude Code](https://claude.ai/code) + Docker
+
+```bash
+claude mcp add --scope user solace-semp docker -- run -i --rm --no-healthcheck \
+  -e MCP_TRANSPORT=stdio \
+  -e SEMP_BROKER_MY_URL=http://your-solace-host:8080 \
+  -e SEMP_BROKER_MY_USERNAME=admin \
+  -e SEMP_BROKER_MY_PASSWORD=yourpassword \
+  -e SEMP_BROKER_MY_LABEL=MyBroker \
+  tanendra/solace-semp-mcp:latest
+```
+
+Claude Code starts the container automatically on demand — no pre-running server needed. To remove:
+
+```bash
+claude mcp remove solace-semp
+```
+
+---
+
+## Option B — From source
+
+**Prerequisites:** [Claude Code](https://claude.ai/code) + Node.js 20+
 
 ## Step 1 - Build the server
 

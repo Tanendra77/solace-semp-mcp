@@ -13,12 +13,14 @@ Connect your AI assistant to a Solace broker and ask:
 
 ## Quick start
 
+**SSE mode** (HTTP server, connect any MCP client):
+
 ```bash
 docker run -d -p 3000:3000 \
   -e SEMP_BROKER_MY_URL=http://your-solace-host:8080 \
   -e SEMP_BROKER_MY_USERNAME=admin \
   -e SEMP_BROKER_MY_PASSWORD=yourpassword \
-  -e SEMP_BROKER_MY_LABEL="My Broker" \
+  -e SEMP_BROKER_MY_LABEL=MyBroker \
   tanendra/solace-semp-mcp:latest
 ```
 
@@ -28,6 +30,14 @@ Verify it's running:
 curl http://localhost:3000/health
 # {"status":"ok","brokers":1}
 ```
+
+**Connect to Claude Code** (one command, no container management needed):
+
+```bash
+claude mcp add --scope user solace-semp docker -- run -i --rm --no-healthcheck -e MCP_TRANSPORT=stdio -e SEMP_BROKER_MY_URL=http://your-solace-host:8080 -e SEMP_BROKER_MY_USERNAME=admin -e SEMP_BROKER_MY_PASSWORD=yourpassword -e SEMP_BROKER_MY_LABEL=MyBroker tanendra/solace-semp-mcp:latest
+```
+
+Claude Code will spin up the container automatically on demand — no pre-running server needed. Requires [Claude Code](https://claude.ai/code) and Docker.
 
 ---
 

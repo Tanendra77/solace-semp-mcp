@@ -10,9 +10,31 @@ Get up and running with Solace SEMP MCP in under five minutes.
 
 ---
 
-## Option A — Claude Code (local, stdio)
+## Option A — Docker + Claude Code (recommended, no clone needed)
 
-The recommended path for using the server with Claude Code on your local machine.
+Connect to Claude Code with a single command. Docker pulls the image automatically — no Node.js, no cloning required.
+
+```bash
+claude mcp add --scope user solace-semp docker -- run -i --rm --no-healthcheck \
+  -e MCP_TRANSPORT=stdio \
+  -e SEMP_BROKER_MY_URL=http://your-solace-host:8080 \
+  -e SEMP_BROKER_MY_USERNAME=admin \
+  -e SEMP_BROKER_MY_PASSWORD=yourpassword \
+  -e SEMP_BROKER_MY_LABEL=MyBroker \
+  tanendra/solace-semp-mcp:latest
+```
+
+Claude Code spins up the container on demand — no pre-running server needed. Start a new conversation and ask:
+
+> *"List all brokers"*
+
+**Requirements:** [Claude Code](https://claude.ai/code) + Docker
+
+---
+
+## Option B — Claude Code (local, from source)
+
+If you want to develop or modify the server.
 
 **1. Clone and install**
 
@@ -57,13 +79,11 @@ Start a new Claude Code conversation and ask:
 
 > *"List all brokers"*
 
-You should see your broker listed. Then try:
-
-> *"Get broker health for my-broker"*
-
 ---
 
-## Option B — Docker (SSE, remote or team use)
+## Option C — Docker SSE (remote or team use)
+
+Run a persistent HTTP server that any SSE-capable MCP client can connect to.
 
 **1. Pull and run**
 
@@ -72,7 +92,7 @@ docker run -d -p 3000:3000 \
   -e SEMP_BROKER_MY_URL=http://your-solace-host:8080 \
   -e SEMP_BROKER_MY_USERNAME=admin \
   -e SEMP_BROKER_MY_PASSWORD=yourpassword \
-  -e SEMP_BROKER_MY_LABEL="My Broker" \
+  -e SEMP_BROKER_MY_LABEL=MyBroker \
   tanendra/solace-semp-mcp:latest
 ```
 
