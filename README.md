@@ -10,6 +10,12 @@
   <a href="./LICENSE">License</a>
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/@tanendra77/solace-semp-mcp">
+    <img src="https://img.shields.io/npm/v/@tanendra77/solace-semp-mcp?label=npm" alt="npm version" />
+  </a>
+</p>
+
 ---
 
 ## Overview
@@ -55,6 +61,8 @@ doc/            Reference notes and design material
 - Reachable Solace PubSub+ broker with SEMP v2 enabled
 
 ## Installation
+
+Package on npm: [npmjs.com/package/@tanendra77/solace-semp-mcp](https://www.npmjs.com/package/@tanendra77/solace-semp-mcp)
 
 ```bash
 npm install
@@ -229,16 +237,28 @@ If `MCP_API_KEY` is set, send `Authorization: Bearer <token>`.
 
 ### Claude Code
 
-Typical local configuration uses `stdio`:
+The fastest way — no Docker, no cloning, no build step:
+
+```bash
+npx @tanendra77/solace-semp-mcp setup
+```
+
+The interactive wizard asks for scope (global or project) and your broker details, then writes the config automatically. See [doc/connecting-to-claude-code.md](./doc/connecting-to-claude-code.md) for the full setup guide.
+
+Alternatively, configure manually with a JSON block:
 
 ```json
 {
   "mcpServers": {
     "solace-semp": {
-      "command": "node",
-      "args": ["D:\\solace-semp-mcp\\dist\\index.js"],
+      "command": "npx",
+      "args": ["-y", "@tanendra77/solace-semp-mcp@latest"],
       "env": {
-        "MCP_TRANSPORT": "stdio"
+        "MCP_TRANSPORT": "stdio",
+        "SEMP_BROKER_MY_URL": "http://your-solace-host:8080",
+        "SEMP_BROKER_MY_USERNAME": "admin",
+        "SEMP_BROKER_MY_PASSWORD": "yourpassword",
+        "SEMP_BROKER_MY_LABEL": "MyBroker"
       }
     }
   }
