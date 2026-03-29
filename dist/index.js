@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const loader_1 = require("./brokers/loader");
@@ -6,6 +7,13 @@ const server_1 = require("./server");
 const stdio_1 = require("./transport/stdio");
 const sse_1 = require("./transport/sse");
 const logger_1 = require("./logger");
+const setup_1 = require("./setup");
+if (process.argv[2] === 'setup') {
+    (0, setup_1.runSetup)().catch((err) => { console.error(err); process.exit(1); });
+}
+else {
+    main().catch((err) => { console.error('Fatal:', err); process.exit(1); });
+}
 async function main() {
     const registry = new registry_1.BrokerRegistry((0, loader_1.mergeBrokers)((0, loader_1.loadBrokersFromFile)('brokers.json'), (0, loader_1.loadBrokersFromEnv)()));
     const server = (0, server_1.createMcpServer)(registry);
@@ -26,5 +34,4 @@ async function main() {
     else
         await (0, stdio_1.startStdioTransport)(server);
 }
-main().catch((err) => { console.error('Fatal:', err); process.exit(1); });
 //# sourceMappingURL=index.js.map

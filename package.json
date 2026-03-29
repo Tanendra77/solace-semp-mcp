@@ -1,8 +1,14 @@
 {
-  "name": "solace-semp-mcp",
+  "name": "@tanendra77/solace-semp-mcp",
   "version": "1.0.0",
-  "description": "MCP server for Solace SEMP API",
+  "description": "MCP server for Solace PubSub+ SEMP API — run via npx or add to Claude Code",
   "main": "dist/index.js",
+  "bin": {
+    "solace-semp-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/"
+  ],
   "type": "commonjs",
   "scripts": {
     "build": "tsc",

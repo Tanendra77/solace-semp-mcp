@@ -1,9 +1,17 @@
+#!/usr/bin/env node
 import { loadBrokersFromFile, loadBrokersFromEnv, mergeBrokers } from './brokers/loader';
 import { BrokerRegistry } from './brokers/registry';
 import { createMcpServer } from './server';
 import { startStdioTransport } from './transport/stdio';
 import { startSseTransport } from './transport/sse';
 import { logger } from './logger';
+import { runSetup } from './setup';
+
+if (process.argv[2] === 'setup') {
+  runSetup().catch((err: unknown) => { console.error(err); process.exit(1); });
+} else {
+  main().catch((err: unknown) => { console.error('Fatal:', err); process.exit(1); });
+}
 
 async function main(): Promise<void> {
   const registry = new BrokerRegistry(mergeBrokers(loadBrokersFromFile('brokers.json'), loadBrokersFromEnv()));
@@ -26,5 +34,3 @@ async function main(): Promise<void> {
   if (transport === 'sse') await startSseTransport(server, registry);
   else await startStdioTransport(server);
 }
-
-main().catch((err: unknown) => { console.error('Fatal:', err); process.exit(1); });

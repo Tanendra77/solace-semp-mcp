@@ -10,7 +10,25 @@ Get up and running with Solace SEMP MCP in under five minutes.
 
 ---
 
-## Option A — Docker + Claude Code (recommended, no clone needed)
+## Option A — npx + Claude Code (recommended, no Docker or clone needed)
+
+The fastest path. Run one command — the wizard asks for your broker details and writes the config automatically.
+
+**Prerequisites:** [Claude Code](https://claude.ai/code) + Node.js 20+
+
+```bash
+npx @tanendra77/solace-semp-mcp setup
+```
+
+Choose **global** to use from any project, or **project** to scope it to the current folder. Restart Claude Code when done, then ask:
+
+> *"List all brokers"*
+
+Run again anytime to add more brokers.
+
+---
+
+## Option B — Docker + Claude Code (no clone needed)
 
 Connect to Claude Code with a single command. Docker pulls the image automatically — no Node.js, no cloning required.
 
@@ -32,7 +50,7 @@ Claude Code spins up the container on demand — no pre-running server needed. S
 
 ---
 
-## Option B — Claude Code (local, from source)
+## Option C — Claude Code (local, from source)
 
 If you want to develop or modify the server.
 
@@ -81,7 +99,7 @@ Start a new Claude Code conversation and ask:
 
 ---
 
-## Option C — Docker SSE (remote or team use)
+## Option D — Docker SSE (remote or team use)
 
 Run a persistent HTTP server that any SSE-capable MCP client can connect to.
 
