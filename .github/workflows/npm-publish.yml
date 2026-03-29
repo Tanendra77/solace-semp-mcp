@@ -5,10 +5,11 @@ on:
     tags:
       - 'v*.*.*'
 
-# contents: read is sufficient — npm publish authenticates via NPM_TOKEN secret,
-# not GITHUB_TOKEN. No additional permissions required.
+# contents: read to checkout the repo
+# id-token: write required for OIDC Trusted Publisher authentication with npm
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -34,5 +35,3 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
