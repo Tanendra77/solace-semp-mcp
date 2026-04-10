@@ -13,8 +13,22 @@ function nextCursor(nextPageUri?: string): string | undefined {
 const DEFAULT_PAYLOAD_LIMIT = 2048;
 
 function truncatePayload(payload: unknown, limitBytes: number): object {
-  if (typeof payload !== 'string' || payload.length <= limitBytes) return { payload };
-  return { payload_preview: payload.slice(0, limitBytes) + '...', payload_truncated: true, payload_original_size: payload.length };
+  if (typeof payload !== 'string') return { payload };
+  const buf = Buffer.from(payload, 'utf-8');
+  if (buf.byteLength <= limitBytes) return { payload };
+  // Truncate at byte boundary, but backtrack if we'd create an incomplete UTF-8 sequence
+  let truncateAt = limitBytes;
+  while (truncateAt > 0) {
+    const truncated = buf.subarray(0, truncateAt);
+    const decoded = truncated.toString('utf-8');
+    if (Buffer.byteLength(decoded, 'utf-8') === truncateAt) break; // Valid boundary
+    truncateAt--;
+  }
+  return {
+    payload_preview: buf.subarray(0, truncateAt).toString('utf-8') + '...',
+    payload_truncated: true,
+    payload_original_size: buf.byteLength,
+  };
 }
 
 export async function handleListQueues(registry: BrokerRegistry, brokerName: string, vpn: string, limit: number, cursor?: string): Promise<string> {
