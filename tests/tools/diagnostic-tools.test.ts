@@ -59,3 +59,32 @@ describe('handleDetectMessageLag', () => {
     expect(r).toContain('No message lag');
   });
 });
+
+const TRUNCATION_WARNING = 'Results limited to 500 queues';
+
+describe('pagination truncation warning', () => {
+  beforeEach(() => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({
+      data: queues,
+      meta: { paging: { nextPageUri: '/SEMP/v2/monitor/msgVpns/default/queues?cursor=abc' } },
+    });
+  });
+
+  it('find_backlogged_queues warns when results are truncated', async () => {
+    const r = await handleFindBackloggedQueues(registry, 'test', 'default', 0);
+    expect(r).toContain(TRUNCATION_WARNING);
+  });
+  it('find_idle_consumers warns when results are truncated', async () => {
+    const r = await handleFindIdleConsumers(registry, 'test', 'default');
+    expect(r).toContain(TRUNCATION_WARNING);
+  });
+  it('detect_message_lag warns when results are truncated', async () => {
+    const r = await handleDetectMessageLag(registry, 'test', 'default');
+    expect(r).toContain(TRUNCATION_WARNING);
+  });
+  it('no warning when all results fit in one page', async () => {
+    (SempClient.prototype.request as jest.Mock).mockResolvedValue({ data: queues, meta: {} });
+    const r = await handleFindBackloggedQueues(registry, 'test', 'default', 0);
+    expect(r).not.toContain(TRUNCATION_WARNING);
+  });
+});
