@@ -114,7 +114,7 @@ export function createOAuthHandlers(options: OAuthOptions) {
       const q = req.query as Record<string, string | undefined>;
       const { response_type, client_id, redirect_uri, code_challenge, code_challenge_method, state } = q;
 
-      if (!response_type || !client_id || !redirect_uri || !code_challenge || code_challenge_method !== 'S256') {
+      if (response_type !== 'code' || !client_id || !redirect_uri || !code_challenge || code_challenge_method !== 'S256') {
         res.status(400).json({ error: 'invalid_request', error_description: 'Missing or invalid parameters' });
         return;
       }
@@ -136,7 +136,13 @@ export function createOAuthHandlers(options: OAuthOptions) {
           expiresAt: Date.now() + 10 * 60 * 1000,
           used: false,
         });
-        const url = new URL(redirect_uri);
+        let url: URL;
+        try {
+          url = new URL(redirect_uri);
+        } catch {
+          res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri' });
+          return;
+        }
         url.searchParams.set('code', code);
         if (state) url.searchParams.set('state', state);
         res.redirect(url.toString());
@@ -180,6 +186,13 @@ button{padding:8px 16px;cursor:pointer}</style></head>
         return;
       }
 
+      // Validate redirect_uri against registered client
+      const registeredClient = clients.get(String(client_id));
+      if (registeredClient && !registeredClient.redirectUris.includes(String(redirect_uri))) {
+        res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uri mismatch' });
+        return;
+      }
+
       const code = crypto.randomBytes(16).toString('hex');
       authCodes.set(code, {
         clientId: String(client_id),
@@ -190,7 +203,13 @@ button{padding:8px 16px;cursor:pointer}</style></head>
         used: false,
       });
 
-      const url = new URL(String(redirect_uri));
+      let url: URL;
+      try {
+        url = new URL(String(redirect_uri));
+      } catch {
+        res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri' });
+        return;
+      }
       url.searchParams.set('code', code);
       if (state) url.searchParams.set('state', String(state));
       res.redirect(url.toString());
