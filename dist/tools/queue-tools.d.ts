@@ -9,5 +9,5 @@ export declare function handleGetQueueConfig(registry: BrokerRegistry, brokerNam
 export declare function handleCreateQueue(registry: BrokerRegistry, brokerName: string, vpn: string, config: Record<string, unknown>, confirm: boolean): Promise<string>;
 export declare function handleUpdateQueueConfig(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, config: Record<string, unknown>, confirm: boolean): Promise<string>;
 export declare function handleDeleteQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean): Promise<string>;
-export declare function handleClearQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean): Promise<string>;
+export declare function handleClearQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean, actionLabel?: string): Promise<string>;
 export declare function registerQueueTools(server: McpServer, registry: BrokerRegistry): void;

@@ -26,9 +26,25 @@ function nextCursor(nextPageUri) {
 }
 const DEFAULT_PAYLOAD_LIMIT = 2048;
 function truncatePayload(payload, limitBytes) {
-    if (typeof payload !== 'string' || payload.length <= limitBytes)
+    if (typeof payload !== 'string')
         return { payload };
-    return { payload_preview: payload.slice(0, limitBytes) + '...', payload_truncated: true, payload_original_size: payload.length };
+    const buf = Buffer.from(payload, 'utf-8');
+    if (buf.byteLength <= limitBytes)
+        return { payload };
+    // Truncate at byte boundary, but backtrack if we'd create an incomplete UTF-8 sequence
+    let truncateAt = limitBytes;
+    while (truncateAt > 0) {
+        const truncated = buf.subarray(0, truncateAt);
+        const decoded = truncated.toString('utf-8');
+        if (Buffer.byteLength(decoded, 'utf-8') === truncateAt)
+            break; // Valid boundary
+        truncateAt--;
+    }
+    return {
+        payload_preview: buf.subarray(0, truncateAt).toString('utf-8') + '...',
+        payload_truncated: true,
+        payload_original_size: buf.byteLength,
+    };
 }
 async function handleListQueues(registry, brokerName, vpn, limit, cursor) {
     const broker = registry.getOrThrow(brokerName);
@@ -120,11 +136,11 @@ async function handleDeleteQueue(registry, brokerName, vpn, queue, confirm) {
     await new client_1.SempClient(broker).request({ api: 'config', method: 'DELETE', path: `/msgVpns/${vpn}/queues/${queue}` });
     return (0, confirmation_1.buildExecutedResponse)(broker.name, broker.label, `Deleted queue "${queue}"`, '200 OK');
 }
-async function handleClearQueue(registry, brokerName, vpn, queue, confirm) {
+async function handleClearQueue(registry, brokerName, vpn, queue, confirm, actionLabel = 'clear') {
     const broker = registry.getOrThrow(brokerName);
     if (!confirm) {
         return (0, confirmation_1.buildDryRunResponse)({
-            tier: confirmation_1.RiskTier.DELETE, action: `clear all messages from queue "${queue}" on VPN "${vpn}"`,
+            tier: confirmation_1.RiskTier.DELETE, action: `${actionLabel} all messages from queue "${queue}" on VPN "${vpn}"`,
             brokerName: broker.name, brokerLabel: broker.label,
             sempEndpoint: `POST /SEMP/v2/action/msgVpns/${vpn}/queues/${queue}/deleteMsgs`,
             effect: `Deletes ALL messages from queue "${queue}". This cannot be undone.`,
@@ -144,6 +160,6 @@ function registerQueueTools(server, registry) {
     server.tool('update_queue_config', 'Update queue configuration. dry_run by default.', { broker: zod_1.z.string(), vpn: zod_1.z.string(), queue: zod_1.z.string(), config: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()), confirm: zod_1.z.boolean().default(false) }, async ({ broker, vpn, queue, config, confirm }) => ({ content: [{ type: 'text', text: await handleUpdateQueueConfig(registry, broker, vpn, queue, config, confirm) }] }));
     server.tool('delete_queue', 'Delete a queue and all its messages. dry_run by default.', { broker: zod_1.z.string(), vpn: zod_1.z.string(), queue: zod_1.z.string(), confirm: zod_1.z.boolean().default(false) }, async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleDeleteQueue(registry, broker, vpn, queue, confirm) }] }));
     server.tool('clear_queue', 'Delete all messages in a queue (purge). dry_run by default.', { broker: zod_1.z.string(), vpn: zod_1.z.string(), queue: zod_1.z.string(), confirm: zod_1.z.boolean().default(false) }, async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleClearQueue(registry, broker, vpn, queue, confirm) }] }));
-    server.tool('purge_queue', 'Alias for clear_queue — delete all messages in a queue.', { broker: zod_1.z.string(), vpn: zod_1.z.string(), queue: zod_1.z.string(), confirm: zod_1.z.boolean().default(false) }, async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleClearQueue(registry, broker, vpn, queue, confirm) }] }));
+    server.tool('purge_queue', 'Alias for clear_queue — delete all messages in a queue.', { broker: zod_1.z.string(), vpn: zod_1.z.string(), queue: zod_1.z.string(), confirm: zod_1.z.boolean().default(false) }, async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleClearQueue(registry, broker, vpn, queue, confirm, 'purge') }] }));
 }
 //# sourceMappingURL=queue-tools.js.map

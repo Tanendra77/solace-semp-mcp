@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { BrokerRegistry } from '../brokers/registry';
+export declare function isPrivateUrl(url: string): boolean;
 export declare function handleListBrokers(registry: BrokerRegistry): Promise<string>;
 export declare function handleAddBroker(registry: BrokerRegistry, params: {
     name: string;

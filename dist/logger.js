@@ -15,7 +15,7 @@ function createLogger() {
     const validLevels = ['error', 'warn', 'info', 'debug'];
     const envLevel = process.env['LOG_LEVEL'] ?? '';
     const level = validLevels.includes(envLevel) ? envLevel : 'info';
-    const logDir = 'logs';
+    const logDir = process.env['LOG_DIR'] ?? path_1.default.join(process.cwd(), 'logs');
     const transports = [
         new winston_1.default.transports.Console({ format: winston_1.default.format.combine(winston_1.default.format.colorize(), winston_1.default.format.simple()) }),
         new winston_1.default.transports.File({ filename: path_1.default.join(logDir, `info-${getDateSuffix()}.log`), level: 'info' }),

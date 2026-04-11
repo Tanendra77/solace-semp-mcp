@@ -16,7 +16,6 @@ else {
 }
 async function main() {
     const registry = new registry_1.BrokerRegistry((0, loader_1.mergeBrokers)((0, loader_1.loadBrokersFromFile)('brokers.json'), (0, loader_1.loadBrokersFromEnv)()));
-    const server = (0, server_1.createMcpServer)(registry);
     const transport = process.env['MCP_TRANSPORT'] ?? 'stdio';
     if (transport !== 'stdio' && transport !== 'sse')
         logger_1.logger.warn(`Unknown MCP_TRANSPORT "${transport}", defaulting to stdio`);
@@ -29,9 +28,12 @@ async function main() {
         transport === 'sse' ? `Rate limit:         ${process.env['MCP_RATE_LIMIT_RPS'] ?? '10'} req/s` : null,
         `Log level:          ${process.env['LOG_LEVEL'] ?? 'info'}`,
     ].filter(Boolean).join('\n'));
-    if (transport === 'sse')
-        await (0, sse_1.startSseTransport)(server, registry);
-    else
-        await (0, stdio_1.startStdioTransport)(server);
+    if (transport === 'sse') {
+        // SSE mode: each connection gets its own McpServer instance (SDK constraint)
+        await (0, sse_1.startSseTransport)(() => (0, server_1.createMcpServer)(registry), registry);
+    }
+    else {
+        await (0, stdio_1.startStdioTransport)((0, server_1.createMcpServer)(registry));
+    }
 }
 //# sourceMappingURL=index.js.map

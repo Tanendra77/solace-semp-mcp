@@ -11,4 +11,11 @@ brokers.json
 logs
 *.log
 CLAUDE.md
+GEMINI.md
+AGENTS.md
+.opencode.json
+.windsurfrules
+.cursorrules
 \__pycache__
+.mcp.json
+.code-review-graph

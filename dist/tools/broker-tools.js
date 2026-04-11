@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isPrivateUrl = isPrivateUrl;
 exports.handleListBrokers = handleListBrokers;
 exports.handleAddBroker = handleAddBroker;
 exports.handleRemoveBroker = handleRemoveBroker;
@@ -9,6 +10,15 @@ exports.registerBrokerTools = registerBrokerTools;
 const zod_1 = require("zod");
 const client_1 = require("../semp/client");
 const confirmation_1 = require("../safety/confirmation");
+const PRIVATE_HOST_RE = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|169\.254\.\d+\.\d+)$/i;
+function isPrivateUrl(url) {
+    try {
+        return PRIVATE_HOST_RE.test(new URL(url).hostname);
+    }
+    catch {
+        return false;
+    }
+}
 async function handleListBrokers(registry) {
     const brokers = registry.list();
     if (brokers.length === 0)
@@ -51,7 +61,14 @@ function registerBrokerTools(server, registry) {
     server.tool('add_broker', 'Register a broker in-memory (lost on restart).', {
         name: zod_1.z.string(),
         label: zod_1.z.string(),
-        url: zod_1.z.string().url().refine(v => /^https?:\/\//i.test(v), 'Broker URL must use http or https'),
+        url: zod_1.z.string()
+            .url()
+            .refine(v => /^https?:\/\//i.test(v), 'Broker URL must use http or https')
+            .refine(v => {
+            if (process.env['BLOCK_PRIVATE_BROKER_URLS'] !== 'true' && process.env['BLOCK_PRIVATE_BROKER_URLS'] !== '1')
+                return true;
+            return !isPrivateUrl(v);
+        }, 'Private/loopback URLs are blocked. Unset BLOCK_PRIVATE_BROKER_URLS to allow them.'),
         username: zod_1.z.string(),
         password: zod_1.z.string(),
     }, async (p) => ({ content: [{ type: 'text', text: await handleAddBroker(registry, p) }] }));

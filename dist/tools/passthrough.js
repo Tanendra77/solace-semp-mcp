@@ -5,8 +5,7 @@ exports.registerPassthroughTool = registerPassthroughTool;
 const zod_1 = require("zod");
 const client_1 = require("../semp/client");
 const confirmation_1 = require("../safety/confirmation");
-async function handleSempRequest(registry, brokerName, api, method, path, body, confirm) {
-    const mode = process.env['SEMP_PASSTHROUGH_MODE'] ?? 'advanced';
+async function handleSempRequest(registry, brokerName, api, method, path, body, confirm, mode = process.env['SEMP_PASSTHROUGH_MODE'] ?? 'advanced') {
     if (mode === 'disabled')
         throw new Error('semp_request is disabled. Set SEMP_PASSTHROUGH_MODE=monitor_only or advanced to enable.');
     if (mode === 'monitor_only' && (method.toUpperCase() !== 'GET' || api !== 'monitor'))
@@ -58,7 +57,7 @@ function registerPassthroughTool(server, registry) {
         body: zod_1.z.unknown().optional(),
         confirm: zod_1.z.boolean().default(false),
     }, async ({ broker, api, method, path, body, confirm }) => ({
-        content: [{ type: 'text', text: await handleSempRequest(registry, broker, api, method, path, body, confirm) }],
+        content: [{ type: 'text', text: await handleSempRequest(registry, broker, api, method, path, body, confirm, mode) }],
     }));
 }
 //# sourceMappingURL=passthrough.js.map

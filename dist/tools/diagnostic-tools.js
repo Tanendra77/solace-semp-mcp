@@ -6,6 +6,7 @@ exports.handleDetectMessageLag = handleDetectMessageLag;
 exports.registerDiagnosticTools = registerDiagnosticTools;
 const zod_1 = require("zod");
 const client_1 = require("../semp/client");
+const TRUNCATION_WARNING = '\n\n⚠ Results limited to 500 queues. Additional queues exist but were not evaluated. Use semp_request for full pagination.';
 async function handleFindBackloggedQueues(registry, brokerName, vpn, threshold) {
     const broker = registry.getOrThrow(brokerName);
     const result = await new client_1.SempClient(broker).request({ api: 'monitor', method: 'GET', path: `/msgVpns/${vpn}/queues`, params: { count: 500 } });
@@ -22,9 +23,10 @@ async function handleFindBackloggedQueues(registry, brokerName, vpn, threshold) 
         return { queue: q['queueName'], usagePct: Math.round((used / max) * 100), consumers: q['bindCount'] ?? 0, spooledMsgCount: q['spooledMsgCount'] ?? 0 };
     })
         .sort((a, b) => b.usagePct - a.usagePct);
+    const warning = result.meta?.paging?.nextPageUri ? TRUNCATION_WARNING : '';
     if (backlogged.length === 0)
-        return `No queues exceed ${threshold}% spool usage on VPN '${vpn}'.`;
-    return JSON.stringify(backlogged, null, 2);
+        return `No queues exceed ${threshold}% spool usage on VPN '${vpn}'.${warning}`;
+    return JSON.stringify(backlogged, null, 2) + warning;
 }
 async function handleFindIdleConsumers(registry, brokerName, vpn) {
     const broker = registry.getOrThrow(brokerName);
@@ -33,9 +35,10 @@ async function handleFindIdleConsumers(registry, brokerName, vpn) {
     const idle = queues
         .filter(q => Number(q['bindCount'] ?? 0) > 0 && Number(q['spooledMsgCount'] ?? 0) > 0)
         .map(q => ({ queue: q['queueName'], bindCount: q['bindCount'], spooledMsgCount: q['spooledMsgCount'] }));
+    const warning = result.meta?.paging?.nextPageUri ? TRUNCATION_WARNING : '';
     if (idle.length === 0)
-        return `No idle consumers detected on VPN '${vpn}'.`;
-    return JSON.stringify(idle, null, 2);
+        return `No idle consumers detected on VPN '${vpn}'.${warning}`;
+    return JSON.stringify(idle, null, 2) + warning;
 }
 async function handleDetectMessageLag(registry, brokerName, vpn) {
     const broker = registry.getOrThrow(brokerName);
@@ -49,9 +52,10 @@ async function handleDetectMessageLag(registry, brokerName, vpn) {
         return { queue: q['queueName'], spooledMsgCount: count, severity };
     })
         .sort((a, b) => b.spooledMsgCount - a.spooledMsgCount);
+    const warning = result.meta?.paging?.nextPageUri ? TRUNCATION_WARNING : '';
     if (lagging.length === 0)
-        return `No message lag detected on VPN '${vpn}'.`;
-    return JSON.stringify(lagging, null, 2);
+        return `No message lag detected on VPN '${vpn}'.${warning}`;
+    return JSON.stringify(lagging, null, 2) + warning;
 }
 function registerDiagnosticTools(server, registry) {
     server.tool('find_backlogged_queues', 'Find queues exceeding a spool usage threshold. Useful for capacity planning.', { broker: zod_1.z.string(), vpn: zod_1.z.string(), spool_threshold_percent: zod_1.z.number().int().min(0).max(100).default(80) }, async ({ broker, vpn, spool_threshold_percent }) => ({ content: [{ type: 'text', text: await handleFindBackloggedQueues(registry, broker, vpn, spool_threshold_percent) }] }));

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "solace-semp-sse": {
+      "type": "sse",
+      "url": "http://localhost:3000/sse"
+    },
+    "solace-semp-stdio": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
