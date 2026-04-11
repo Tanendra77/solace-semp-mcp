@@ -215,6 +215,47 @@ button{padding:8px 16px;cursor:pointer}</style></head>
       if (state) url.searchParams.set('state', String(state));
       res.redirect(url.toString());
     });
+
+    // Token endpoint
+    app.post('/token', (req, res) => {
+      const grantType = (req.body ?? {}).grant_type as string | undefined;
+
+      if (grantType === 'authorization_code') {
+        const { code, code_verifier, client_id, redirect_uri } = (req.body ?? {}) as Record<string, string>;
+
+        if (!code || !code_verifier || !client_id || !redirect_uri) {
+          res.status(400).json({ error: 'invalid_request', error_description: 'Missing required parameters' });
+          return;
+        }
+
+        const entry = authCodes.get(code);
+        if (!entry) {
+          res.status(400).json({ error: 'invalid_grant', error_description: 'Invalid authorization code' });
+          return;
+        }
+        if (entry.used || Date.now() > entry.expiresAt) {
+          authCodes.delete(code);
+          res.status(400).json({ error: 'invalid_grant', error_description: 'Code expired or already used' });
+          return;
+        }
+        if (entry.clientId !== client_id || entry.redirectUri !== redirect_uri) {
+          res.status(400).json({ error: 'invalid_grant', error_description: 'client_id or redirect_uri mismatch' });
+          return;
+        }
+        if (!verifyPkce(code_verifier, entry.codeChallenge)) {
+          res.status(400).json({ error: 'invalid_grant', error_description: 'Invalid code_verifier' });
+          return;
+        }
+
+        entry.used = true;
+        const token = crypto.randomBytes(32).toString('hex');
+        accessTokens.set(token, { expiresAt: Date.now() + tokenTtlMs });
+        res.json({ access_token: token, token_type: 'Bearer', expires_in: options.tokenTtlSeconds ?? 3600 });
+        return;
+      }
+
+      res.status(400).json({ error: 'unsupported_grant_type', error_description: `Unsupported grant type: ${String(grantType)}` });
+    });
   }
 
   function createMiddleware(): express.RequestHandler {

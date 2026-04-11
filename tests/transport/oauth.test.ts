@@ -14,6 +14,21 @@ function makeApp(apiKey?: string) {
   return { app, oauth };
 }
 
+const PKCE_VERIFIER = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
+const PKCE_CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
+
+async function getAuthCode(app: express.Application, clientId = 'test-client', redirectUri = 'http://localhost:8080/cb'): Promise<string> {
+  const res = await request(app).get('/authorize').query({
+    response_type: 'code',
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    code_challenge: PKCE_CHALLENGE,
+    code_challenge_method: 'S256',
+  });
+  const location = new URL(res.headers['location']!);
+  return location.searchParams.get('code')!;
+}
+
 describe('OAuth discovery', () => {
   it('GET /.well-known/oauth-authorization-server returns RFC 8414 fields', async () => {
     const { app } = makeApp();
@@ -155,5 +170,81 @@ describe('Authorization endpoint', () => {
       })
       .expect(401);
     expect(res.body.error).toBe('access_denied');
+  });
+});
+
+describe('Token endpoint — authorization_code grant', () => {
+  const clientId = 'test-client';
+  const redirectUri = 'http://localhost:8080/cb';
+
+  it('exchanges valid code for access token', async () => {
+    const { app } = makeApp(); // no apiKey → auto-approve
+    const code = await getAuthCode(app, clientId, redirectUri);
+
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'authorization_code', code, code_verifier: PKCE_VERIFIER, client_id: clientId, redirect_uri: redirectUri })
+      .expect(200);
+
+    expect(typeof res.body.access_token).toBe('string');
+    expect(res.body.access_token.length).toBeGreaterThan(0);
+    expect(res.body.token_type).toBe('Bearer');
+    expect(res.body.expires_in).toBe(3600);
+  });
+
+  it('returns invalid_grant for unknown code', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'authorization_code', code: 'bad-code', code_verifier: PKCE_VERIFIER, client_id: clientId, redirect_uri: redirectUri })
+      .expect(400);
+    expect(res.body.error).toBe('invalid_grant');
+  });
+
+  it('returns invalid_grant for already-used code', async () => {
+    const { app } = makeApp();
+    const code = await getAuthCode(app, clientId, redirectUri);
+    // Use it once
+    await request(app).post('/token').send({ grant_type: 'authorization_code', code, code_verifier: PKCE_VERIFIER, client_id: clientId, redirect_uri: redirectUri });
+    // Try to use it again
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'authorization_code', code, code_verifier: PKCE_VERIFIER, client_id: clientId, redirect_uri: redirectUri })
+      .expect(400);
+    expect(res.body.error).toBe('invalid_grant');
+  });
+
+  it('returns invalid_grant for expired code', async () => {
+    const { app, oauth } = makeApp();
+    const code = await getAuthCode(app, clientId, redirectUri);
+    // Manually expire the code
+    const entry = oauth._stores.authCodes.get(code)!;
+    entry.expiresAt = Date.now() - 1;
+
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'authorization_code', code, code_verifier: PKCE_VERIFIER, client_id: clientId, redirect_uri: redirectUri })
+      .expect(400);
+    expect(res.body.error).toBe('invalid_grant');
+    expect(res.body.error_description).toContain('expired');
+  });
+
+  it('returns invalid_grant for wrong PKCE verifier', async () => {
+    const { app } = makeApp();
+    const code = await getAuthCode(app, clientId, redirectUri);
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'authorization_code', code, code_verifier: 'wrong-verifier', client_id: clientId, redirect_uri: redirectUri })
+      .expect(400);
+    expect(res.body.error).toBe('invalid_grant');
+  });
+
+  it('returns invalid_request when required params are missing', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'authorization_code' }) // missing code, code_verifier, etc.
+      .expect(400);
+    expect(res.body.error).toBe('invalid_request');
   });
 });
