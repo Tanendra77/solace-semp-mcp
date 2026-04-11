@@ -75,3 +75,85 @@ describe('Dynamic client registration', () => {
     expect(res.body.error).toBe('invalid_request');
   });
 });
+
+describe('Authorization endpoint', () => {
+  const authorizeParams = {
+    response_type: 'code',
+    client_id: 'any-client',
+    redirect_uri: 'http://localhost:8080/callback',
+    code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM', // base64url(SHA256("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"))
+    code_challenge_method: 'S256',
+    state: 'xyz',
+  };
+
+  it('GET /authorize without API key auto-redirects with code', async () => {
+    const { app } = makeApp(); // no apiKey
+    const res = await request(app)
+      .get('/authorize')
+      .query(authorizeParams)
+      .expect(302);
+    const location = new URL(res.headers['location']!);
+    expect(location.searchParams.get('code')).toBeTruthy();
+    expect(location.searchParams.get('state')).toBe('xyz');
+  });
+
+  it('GET /authorize with API key returns HTML form', async () => {
+    const { app } = makeApp('secret-key');
+    const res = await request(app)
+      .get('/authorize')
+      .query(authorizeParams)
+      .expect(200);
+    expect(res.headers['content-type']).toContain('text/html');
+    expect(res.text).toContain('<form');
+    expect(res.text).toContain('/authorize/submit');
+  });
+
+  it('GET /authorize with missing code_challenge returns 400', async () => {
+    const { app } = makeApp();
+    const { code_challenge, ...rest } = authorizeParams;
+    const res = await request(app).get('/authorize').query(rest).expect(400);
+    expect(res.body.error).toBe('invalid_request');
+  });
+
+  it('GET /authorize with wrong code_challenge_method returns 400', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .get('/authorize')
+      .query({ ...authorizeParams, code_challenge_method: 'plain' })
+      .expect(400);
+    expect(res.body.error).toBe('invalid_request');
+  });
+
+  it('POST /authorize/submit with correct API key redirects with code', async () => {
+    const { app } = makeApp('secret-key');
+    const res = await request(app)
+      .post('/authorize/submit')
+      .type('form')
+      .send({
+        client_id: 'any-client',
+        redirect_uri: 'http://localhost:8080/callback',
+        code_challenge: authorizeParams.code_challenge,
+        state: 'xyz',
+        api_key: 'secret-key',
+      })
+      .expect(302);
+    const location = new URL(res.headers['location']!);
+    expect(location.searchParams.get('code')).toBeTruthy();
+    expect(location.searchParams.get('state')).toBe('xyz');
+  });
+
+  it('POST /authorize/submit with wrong API key returns 401', async () => {
+    const { app } = makeApp('secret-key');
+    const res = await request(app)
+      .post('/authorize/submit')
+      .type('form')
+      .send({
+        client_id: 'any-client',
+        redirect_uri: 'http://localhost:8080/callback',
+        code_challenge: authorizeParams.code_challenge,
+        api_key: 'wrong-key',
+      })
+      .expect(401);
+    expect(res.body.error).toBe('access_denied');
+  });
+});

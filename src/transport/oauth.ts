@@ -108,6 +108,93 @@ export function createOAuthHandlers(options: OAuthOptions) {
       clients.set(clientId, { clientId, redirectUris: redirect_uris, createdAt: Date.now() });
       res.status(201).json({ client_id: clientId, redirect_uris });
     });
+
+    // Authorization endpoint — show form or auto-approve
+    app.get('/authorize', (req, res) => {
+      const q = req.query as Record<string, string | undefined>;
+      const { response_type, client_id, redirect_uri, code_challenge, code_challenge_method, state } = q;
+
+      if (!response_type || !client_id || !redirect_uri || !code_challenge || code_challenge_method !== 'S256') {
+        res.status(400).json({ error: 'invalid_request', error_description: 'Missing or invalid parameters' });
+        return;
+      }
+
+      const client = clients.get(client_id);
+      if (client && !client.redirectUris.includes(redirect_uri)) {
+        res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uri mismatch' });
+        return;
+      }
+
+      // No API key configured — auto-approve
+      if (!apiKey) {
+        const code = crypto.randomBytes(16).toString('hex');
+        authCodes.set(code, {
+          clientId: client_id,
+          redirectUri: redirect_uri,
+          codeChallenge: code_challenge,
+          codeChallengeMethod: 'S256',
+          expiresAt: Date.now() + 10 * 60 * 1000,
+          used: false,
+        });
+        const url = new URL(redirect_uri);
+        url.searchParams.set('code', code);
+        if (state) url.searchParams.set('state', state);
+        res.redirect(url.toString());
+        return;
+      }
+
+      // Show HTML form for API key entry
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>MCP Authorization — Solace SEMP</title>
+<style>body{font-family:sans-serif;max-width:400px;margin:80px auto;padding:0 16px}
+input{display:block;width:100%;padding:8px;margin:8px 0;box-sizing:border-box}
+button{padding:8px 16px;cursor:pointer}</style></head>
+<body>
+<h2>Solace SEMP MCP — Authorize</h2>
+<p>Enter your API key to grant access.</p>
+<form method="POST" action="/authorize/submit">
+  <input type="hidden" name="client_id" value="${escapeHtml(client_id)}">
+  <input type="hidden" name="redirect_uri" value="${escapeHtml(redirect_uri)}">
+  <input type="hidden" name="code_challenge" value="${escapeHtml(code_challenge)}">
+  <input type="hidden" name="state" value="${escapeHtml(state ?? '')}">
+  <label>API Key</label>
+  <input type="password" name="api_key" autofocus required>
+  <button type="submit">Authorize</button>
+</form>
+</body></html>`);
+    });
+
+    // Authorization form submission
+    app.post('/authorize/submit', express.urlencoded({ extended: false }), (req, res) => {
+      const { client_id, redirect_uri, code_challenge, state, api_key } = req.body ?? {};
+
+      if (!client_id || !redirect_uri || !code_challenge || !api_key) {
+        res.status(400).json({ error: 'invalid_request', error_description: 'Missing parameters' });
+        return;
+      }
+
+      if (!apiKey || !timingSafeEqual(String(api_key), apiKey)) {
+        res.status(401).json({ error: 'access_denied', error_description: 'Invalid API key' });
+        return;
+      }
+
+      const code = crypto.randomBytes(16).toString('hex');
+      authCodes.set(code, {
+        clientId: String(client_id),
+        redirectUri: String(redirect_uri),
+        codeChallenge: String(code_challenge),
+        codeChallengeMethod: 'S256',
+        expiresAt: Date.now() + 10 * 60 * 1000,
+        used: false,
+      });
+
+      const url = new URL(String(redirect_uri));
+      url.searchParams.set('code', code);
+      if (state) url.searchParams.set('state', String(state));
+      res.redirect(url.toString());
+    });
   }
 
   function createMiddleware(): express.RequestHandler {
