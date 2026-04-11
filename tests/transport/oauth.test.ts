@@ -47,3 +47,31 @@ describe('OAuth discovery', () => {
     expect(res.body.authorization_endpoint).toBe('http://localhost:3000/authorize');
   });
 });
+
+describe('Dynamic client registration', () => {
+  it('POST /register with redirect_uris returns client_id', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/register')
+      .send({ redirect_uris: ['http://localhost:8080/callback'] })
+      .expect(201);
+    expect(typeof res.body.client_id).toBe('string');
+    expect(res.body.client_id.length).toBeGreaterThan(0);
+    expect(res.body.redirect_uris).toEqual(['http://localhost:8080/callback']);
+  });
+
+  it('POST /register without redirect_uris returns 400', async () => {
+    const { app } = makeApp();
+    const res = await request(app).post('/register').send({}).expect(400);
+    expect(res.body.error).toBe('invalid_request');
+  });
+
+  it('POST /register with empty redirect_uris array returns 400', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/register')
+      .send({ redirect_uris: [] })
+      .expect(400);
+    expect(res.body.error).toBe('invalid_request');
+  });
+});

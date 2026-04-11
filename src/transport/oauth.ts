@@ -94,6 +94,17 @@ export function createOAuthHandlers(options: OAuthOptions) {
         bearer_methods_supported: ['header'],
       });
     });
+
+    app.post('/register', (req, res) => {
+      const { redirect_uris } = req.body ?? {};
+      if (!Array.isArray(redirect_uris) || redirect_uris.length === 0) {
+        res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uris is required' });
+        return;
+      }
+      const clientId = crypto.randomUUID();
+      clients.set(clientId, { clientId, redirectUris: redirect_uris as string[] });
+      res.status(201).json({ client_id: clientId, redirect_uris });
+    });
   }
 
   function createMiddleware(): express.RequestHandler {
