@@ -127,6 +127,13 @@ export function createOAuthHandlers(options: OAuthOptions) {
 
       // No API key configured — auto-approve
       if (!apiKey) {
+        let url: URL;
+        try {
+          url = new URL(redirect_uri);
+        } catch {
+          res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri' });
+          return;
+        }
         const code = crypto.randomBytes(16).toString('hex');
         authCodes.set(code, {
           clientId: client_id,
@@ -136,13 +143,6 @@ export function createOAuthHandlers(options: OAuthOptions) {
           expiresAt: Date.now() + 10 * 60 * 1000,
           used: false,
         });
-        let url: URL;
-        try {
-          url = new URL(redirect_uri);
-        } catch {
-          res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri' });
-          return;
-        }
         url.searchParams.set('code', code);
         if (state) url.searchParams.set('state', state);
         res.redirect(url.toString());
@@ -193,6 +193,14 @@ button{padding:8px 16px;cursor:pointer}</style></head>
         return;
       }
 
+      let url: URL;
+      try {
+        url = new URL(String(redirect_uri));
+      } catch {
+        res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri' });
+        return;
+      }
+
       const code = crypto.randomBytes(16).toString('hex');
       authCodes.set(code, {
         clientId: String(client_id),
@@ -203,13 +211,6 @@ button{padding:8px 16px;cursor:pointer}</style></head>
         used: false,
       });
 
-      let url: URL;
-      try {
-        url = new URL(String(redirect_uri));
-      } catch {
-        res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri' });
-        return;
-      }
       url.searchParams.set('code', code);
       if (state) url.searchParams.set('state', String(state));
       res.redirect(url.toString());
