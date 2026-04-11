@@ -1,27 +1,14 @@
-import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { logger } from '../logger';
 import { BrokerRegistry } from '../brokers/registry';
+import { createOAuthHandlers } from './oauth';
 
 // Each SSE connection needs its own McpServer instance — the SDK does not allow
 // a single server to connect to more than one transport simultaneously.
 type ServerFactory = () => McpServer;
-
-function timingSafeEqual(a: string, b: string): boolean {
-  try {
-    const maxLen = Math.max(Buffer.byteLength(a), Buffer.byteLength(b));
-    const ab = Buffer.alloc(maxLen);
-    const bb = Buffer.alloc(maxLen);
-    ab.write(a);
-    bb.write(b);
-    return crypto.timingSafeEqual(ab, bb);
-  } catch {
-    return false;
-  }
-}
 
 export interface SseAppOptions {
   maxSessions?: number;
@@ -29,6 +16,8 @@ export interface SseAppOptions {
   apiKey?: string;
   corsOrigin?: string;
   trustProxy?: boolean;
+  baseUrl?: string;
+  tokenTtlSeconds?: number;
 }
 
 export function createSseApp(
@@ -39,7 +28,6 @@ export function createSseApp(
   const app = express();
   const maxSessions = options.maxSessions ?? 100;
   const rateLimit = options.rateLimit ?? 10;
-  const apiKey = options.apiKey;
 
   if (options.trustProxy) app.set('trust proxy', 1);
 
@@ -50,16 +38,15 @@ export function createSseApp(
   }
   app.use(express.json());
 
-  if (apiKey) {
-    app.use((req, res, next) => {
-      if (req.path === '/health') return next();
-      const auth = req.headers['authorization'] ?? '';
-      if (!timingSafeEqual(auth, `Bearer ${apiKey}`)) {
-        res.status(401).json({ error: 'Unauthorized' }); return;
-      }
-      next();
-    });
-  }
+  const oauth = createOAuthHandlers({
+    baseUrl: options.baseUrl ?? 'http://localhost:3000',
+    apiKey: options.apiKey,
+    tokenTtlSeconds: options.tokenTtlSeconds,
+  });
+  // Mount OAuth routes BEFORE rate limiter — requests to OAuth endpoints are matched
+  // here and handled immediately, so they never reach the rate limiter below.
+  oauth.mountRoutes(app);
+  app.use(oauth.createMiddleware());
 
   const sessionCounts = new Map<string, { count: number; resetAt: number }>();
   setInterval(() => {
@@ -141,6 +128,8 @@ export async function startSseTransport(serverFactory: ServerFactory, registry: 
   const rawRateLimit = parseInt(process.env['MCP_RATE_LIMIT_RPS'] ?? '10', 10);
   const rawMaxSessions = parseInt(process.env['MCP_MAX_SESSIONS'] ?? '100', 10);
   const trustProxy = process.env['TRUST_PROXY'];
+  const baseUrl = process.env['BASE_URL'] ?? `http://localhost:${port}`;
+  const rawTokenTtl = parseInt(process.env['OAUTH_TOKEN_TTL_SECONDS'] ?? '3600', 10);
 
   const { app } = createSseApp(serverFactory, registry, {
     maxSessions: isNaN(rawMaxSessions) ? 100 : rawMaxSessions,
@@ -148,6 +137,8 @@ export async function startSseTransport(serverFactory: ServerFactory, registry: 
     apiKey: process.env['MCP_API_KEY'],
     corsOrigin: process.env['CORS_ORIGIN'],
     trustProxy: trustProxy === '1' || trustProxy === 'true',
+    baseUrl,
+    tokenTtlSeconds: isNaN(rawTokenTtl) ? 3600 : rawTokenTtl,
   });
 
   app.listen(port, () => logger.info(`MCP SSE server on port ${port}`));
