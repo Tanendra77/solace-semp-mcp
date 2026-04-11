@@ -288,3 +288,72 @@ describe('Token endpoint — client_credentials grant', () => {
     expect(res.body.error).toBe('unsupported_grant_type');
   });
 });
+
+describe('Auth middleware', () => {
+  it('allows request with valid OAuth access token', async () => {
+    const { app } = makeApp('secret-key');
+    // Get a token via client_credentials
+    const tokenRes = await request(app)
+      .post('/token')
+      .send({ grant_type: 'client_credentials', client_secret: 'secret-key' });
+    const token = tokenRes.body.access_token as string;
+
+    await request(app)
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+  });
+
+  it('allows request with raw API key as Bearer token (backward compat)', async () => {
+    const { app } = makeApp('secret-key');
+    await request(app)
+      .get('/protected')
+      .set('Authorization', 'Bearer secret-key')
+      .expect(200);
+  });
+
+  it('rejects request with unknown token (401)', async () => {
+    const { app } = makeApp('secret-key');
+    await request(app)
+      .get('/protected')
+      .set('Authorization', 'Bearer unknown-token')
+      .expect(401);
+  });
+
+  it('rejects request with no Authorization header (401)', async () => {
+    const { app } = makeApp('secret-key');
+    await request(app).get('/protected').expect(401);
+  });
+
+  it('rejects request with expired token (401)', async () => {
+    const { app, oauth } = makeApp('secret-key');
+    const tokenRes = await request(app)
+      .post('/token')
+      .send({ grant_type: 'client_credentials', client_secret: 'secret-key' });
+    const token = tokenRes.body.access_token as string;
+
+    // Manually expire the token
+    const entry = oauth._stores.accessTokens.get(token)!;
+    entry.expiresAt = Date.now() - 1;
+
+    await request(app)
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  });
+
+  it('allows /health without any token even when API key is configured', async () => {
+    const { app } = makeApp('secret-key');
+    await request(app).get('/health').expect(200);
+  });
+
+  it('allows all requests when no API key is configured', async () => {
+    const { app } = makeApp(); // no apiKey
+    await request(app).get('/protected').expect(200);
+  });
+
+  it('allows /.well-known/* without token', async () => {
+    const { app } = makeApp('secret-key');
+    await request(app).get('/.well-known/oauth-authorization-server').expect(200);
+  });
+});

@@ -273,8 +273,29 @@ button{padding:8px 16px;cursor:pointer}</style></head>
   }
 
   function createMiddleware(): express.RequestHandler {
-    // Placeholder — implemented in Task 6
-    return (_req, _res, next) => next();
+    return (req, res, next) => {
+      // /health is always exempt
+      if (req.path === '/health') return next();
+
+      // If no API key configured, allow all traffic
+      if (!apiKey) return next();
+
+      const auth = req.headers['authorization'] ?? '';
+      const bearerToken = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+
+      if (!bearerToken) {
+        res.status(401).json({ error: 'Unauthorized' }); return;
+      }
+
+      // Accept raw API key (backward compatibility)
+      if (timingSafeEqual(bearerToken, apiKey)) return next();
+
+      // Accept valid OAuth access token
+      const tokenEntry = accessTokens.get(bearerToken);
+      if (tokenEntry && Date.now() <= tokenEntry.expiresAt) return next();
+
+      res.status(401).json({ error: 'Unauthorized' });
+    };
   }
 
   return {
