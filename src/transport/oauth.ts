@@ -254,6 +254,20 @@ button{padding:8px 16px;cursor:pointer}</style></head>
         return;
       }
 
+      if (grantType === 'client_credentials') {
+        const { client_secret } = (req.body ?? {}) as Record<string, string>;
+
+        if (apiKey && (!client_secret || !timingSafeEqual(client_secret, apiKey))) {
+          res.status(401).json({ error: 'invalid_client', error_description: 'Invalid client credentials' });
+          return;
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        accessTokens.set(token, { expiresAt: Date.now() + tokenTtlMs });
+        res.json({ access_token: token, token_type: 'Bearer', expires_in: options.tokenTtlSeconds ?? 3600 });
+        return;
+      }
+
       res.status(400).json({ error: 'unsupported_grant_type', error_description: `Unsupported grant type: ${String(grantType)}` });
     });
   }

@@ -248,3 +248,43 @@ describe('Token endpoint — authorization_code grant', () => {
     expect(res.body.error).toBe('invalid_request');
   });
 });
+
+describe('Token endpoint — client_credentials grant', () => {
+  it('issues token when client_secret matches API key', async () => {
+    const { app } = makeApp('secret-key');
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'client_credentials', client_id: 'agent', client_secret: 'secret-key' })
+      .expect(200);
+    expect(typeof res.body.access_token).toBe('string');
+    expect(res.body.token_type).toBe('Bearer');
+    expect(res.body.expires_in).toBe(3600);
+  });
+
+  it('returns invalid_client when client_secret is wrong', async () => {
+    const { app } = makeApp('secret-key');
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'client_credentials', client_id: 'agent', client_secret: 'wrong' })
+      .expect(401);
+    expect(res.body.error).toBe('invalid_client');
+  });
+
+  it('issues token when no API key is configured (open server)', async () => {
+    const { app } = makeApp(); // no apiKey
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'client_credentials' })
+      .expect(200);
+    expect(typeof res.body.access_token).toBe('string');
+  });
+
+  it('returns unsupported_grant_type for unknown grant', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/token')
+      .send({ grant_type: 'implicit' })
+      .expect(400);
+    expect(res.body.error).toBe('unsupported_grant_type');
+  });
+});
