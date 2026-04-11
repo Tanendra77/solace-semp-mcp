@@ -7,9 +7,9 @@ import { RiskTier, tierFromMethod, buildDryRunResponse, buildExecutedResponse, r
 
 export async function handleSempRequest(
   registry: BrokerRegistry, brokerName: string,
-  api: SempApi, method: string, path: string, body: unknown, confirm: boolean
+  api: SempApi, method: string, path: string, body: unknown, confirm: boolean,
+  mode: string = process.env['SEMP_PASSTHROUGH_MODE'] ?? 'advanced'
 ): Promise<string> {
-  const mode = process.env['SEMP_PASSTHROUGH_MODE'] ?? 'advanced';
   if (mode === 'disabled')
     throw new Error('semp_request is disabled. Set SEMP_PASSTHROUGH_MODE=monitor_only or advanced to enable.');
   if (mode === 'monitor_only' && (method.toUpperCase() !== 'GET' || api !== 'monitor'))
@@ -69,7 +69,7 @@ export function registerPassthroughTool(server: McpServer, registry: BrokerRegis
       confirm: z.boolean().default(false),
     },
     async ({ broker, api, method, path, body, confirm }) => ({
-      content: [{ type: 'text', text: await handleSempRequest(registry, broker, api, method, path, body, confirm) }],
+      content: [{ type: 'text', text: await handleSempRequest(registry, broker, api, method, path, body, confirm, mode) }],
     })
   );
 }
