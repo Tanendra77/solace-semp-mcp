@@ -10,7 +10,7 @@ export function createLogger(): winston.Logger {
   const validLevels = ['error', 'warn', 'info', 'debug'];
   const envLevel = process.env['LOG_LEVEL'] ?? '';
   const level = validLevels.includes(envLevel) ? envLevel : 'info';
-  const logDir = 'logs';
+  const logDir = process.env['LOG_DIR'] ?? path.join(process.cwd(), 'logs');
   const transports: winston.transport[] = [
     new winston.transports.Console({ format: winston.format.combine(winston.format.colorize(), winston.format.simple()) }),
     new winston.transports.File({ filename: path.join(logDir, `info-${getDateSuffix()}.log`), level: 'info' }),
