@@ -126,11 +126,11 @@ export async function handleDeleteQueue(registry: BrokerRegistry, brokerName: st
   return buildExecutedResponse(broker.name, broker.label, `Deleted queue "${queue}"`, '200 OK');
 }
 
-export async function handleClearQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean): Promise<string> {
+export async function handleClearQueue(registry: BrokerRegistry, brokerName: string, vpn: string, queue: string, confirm: boolean, actionLabel = 'clear'): Promise<string> {
   const broker = registry.getOrThrow(brokerName);
   if (!confirm) {
     return buildDryRunResponse({
-      tier: RiskTier.DELETE, action: `clear all messages from queue "${queue}" on VPN "${vpn}"`,
+      tier: RiskTier.DELETE, action: `${actionLabel} all messages from queue "${queue}" on VPN "${vpn}"`,
       brokerName: broker.name, brokerLabel: broker.label,
       sempEndpoint: `POST /SEMP/v2/action/msgVpns/${vpn}/queues/${queue}/deleteMsgs`,
       effect: `Deletes ALL messages from queue "${queue}". This cannot be undone.`,
@@ -173,5 +173,5 @@ export function registerQueueTools(server: McpServer, registry: BrokerRegistry):
     async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleClearQueue(registry, broker, vpn, queue, confirm) }] }));
   server.tool('purge_queue', 'Alias for clear_queue — delete all messages in a queue.',
     { broker: z.string(), vpn: z.string(), queue: z.string(), confirm: z.boolean().default(false) },
-    async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleClearQueue(registry, broker, vpn, queue, confirm) }] }));
+    async ({ broker, vpn, queue, confirm }) => ({ content: [{ type: 'text', text: await handleClearQueue(registry, broker, vpn, queue, confirm, 'purge') }] }));
 }

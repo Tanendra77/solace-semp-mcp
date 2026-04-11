@@ -64,3 +64,14 @@ describe('truncatePayload byte accuracy', () => {
     expect(Buffer.byteLength(parsed[0].payload_preview.replace(/\.\.\.$/, ''), 'utf-8')).toBeLessThanOrEqual(20);
   });
 });
+
+describe('purge_queue alias text', () => {
+  it('dry-run response contains "purge" when called with purge label', async () => {
+    const r = await handleClearQueue(registry, 'test', 'default', 'q', false, 'purge');
+    expect(r).toContain('purge');
+  });
+  it('dry-run response contains "clear" by default', async () => {
+    const r = await handleClearQueue(registry, 'test', 'default', 'q', false);
+    expect(r).toContain('clear');
+  });
+});

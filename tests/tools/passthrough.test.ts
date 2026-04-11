@@ -47,3 +47,14 @@ describe('handleSempRequest', () => {
     await expect(handleSempRequest(registry, 'test', 'monitor', 'GET', '/msgVpns', undefined, false)).resolves.toBeTruthy();
   });
 });
+
+describe('mode parameter', () => {
+  it('uses explicitly passed mode regardless of current env var', async () => {
+    process.env['SEMP_PASSTHROUGH_MODE'] = 'advanced';
+    // Pass mode='disabled' explicitly — should throw even though env says advanced
+    await expect(
+      handleSempRequest(registry, 'test', 'monitor', 'GET', '/x', undefined, false, 'disabled')
+    ).rejects.toThrow(/disabled/);
+    delete process.env['SEMP_PASSTHROUGH_MODE'];
+  });
+});
