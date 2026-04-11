@@ -15,7 +15,6 @@ if (process.argv[2] === 'setup') {
 
 async function main(): Promise<void> {
   const registry = new BrokerRegistry(mergeBrokers(loadBrokersFromFile('brokers.json'), loadBrokersFromEnv()));
-  const server = createMcpServer(registry);
 
   const transport = process.env['MCP_TRANSPORT'] ?? 'stdio';
   if (transport !== 'stdio' && transport !== 'sse')
@@ -31,6 +30,10 @@ async function main(): Promise<void> {
     `Log level:          ${process.env['LOG_LEVEL'] ?? 'info'}`,
   ].filter(Boolean).join('\n'));
 
-  if (transport === 'sse') await startSseTransport(server, registry);
-  else await startStdioTransport(server);
+  if (transport === 'sse') {
+    // SSE mode: each connection gets its own McpServer instance (SDK constraint)
+    await startSseTransport(() => createMcpServer(registry), registry);
+  } else {
+    await startStdioTransport(createMcpServer(registry));
+  }
 }

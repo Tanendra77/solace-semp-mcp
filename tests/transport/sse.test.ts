@@ -21,16 +21,16 @@ function makeMockServer(connectImpl: () => Promise<void>) {
 
 describe('SSE session leak', () => {
   it('does not retain transport in map when connect throws', async () => {
-    const server = makeMockServer(async () => { throw new Error('connect failed'); });
-    const { app, transports } = createSseApp(server, registry, { maxSessions: 10 });
+    const factory = () => makeMockServer(async () => { throw new Error('connect failed'); });
+    const { app, transports } = createSseApp(factory, registry, { maxSessions: 10 });
 
     await request(app).get('/sse').expect(500);
     expect(transports.size).toBe(0);
   });
 
   it('does not block new connections after a failed connect', async () => {
-    const server = makeMockServer(async () => { throw new Error('connect failed'); });
-    const { app } = createSseApp(server, registry, { maxSessions: 1 });
+    const factory = () => makeMockServer(async () => { throw new Error('connect failed'); });
+    const { app } = createSseApp(factory, registry, { maxSessions: 1 });
 
     // First request: connect throws → session must be freed
     await request(app).get('/sse').expect(500);
@@ -41,8 +41,8 @@ describe('SSE session leak', () => {
 
 describe('SSE error handler', () => {
   it('returns 500 JSON without stack trace on route error', async () => {
-    const server = makeMockServer(async () => { throw new Error('boom'); });
-    const { app } = createSseApp(server, registry, { maxSessions: 10 });
+    const factory = () => makeMockServer(async () => { throw new Error('boom'); });
+    const { app } = createSseApp(factory, registry, { maxSessions: 10 });
 
     const res = await request(app).get('/sse').expect(500);
     expect(res.body).toEqual({ error: 'Internal server error' });

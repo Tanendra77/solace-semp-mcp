@@ -6,6 +6,10 @@ import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { logger } from '../logger';
 import { BrokerRegistry } from '../brokers/registry';
 
+// Each SSE connection needs its own McpServer instance — the SDK does not allow
+// a single server to connect to more than one transport simultaneously.
+type ServerFactory = () => McpServer;
+
 function timingSafeEqual(a: string, b: string): boolean {
   try {
     const maxLen = Math.max(Buffer.byteLength(a), Buffer.byteLength(b));
@@ -28,7 +32,7 @@ export interface SseAppOptions {
 }
 
 export function createSseApp(
-  server: McpServer,
+  serverFactory: ServerFactory,
   registry: BrokerRegistry,
   options: SseAppOptions = {}
 ): { app: express.Application; transports: Map<string, SSEServerTransport> } {
@@ -95,7 +99,10 @@ export function createSseApp(
       req.on('close', () => transports.delete(transport.sessionId));
       transports.set(transport.sessionId, transport);
       try {
-        await server.server.connect(transport);
+        // Create a fresh McpServer per connection — the SDK forbids reusing a single
+        // server instance across multiple transports simultaneously.
+        const mcpServer = serverFactory();
+        await mcpServer.server.connect(transport);
         logger.info(`SSE client connected: ${transport.sessionId}`);
       } catch (err) {
         transports.delete(transport.sessionId);
@@ -128,14 +135,14 @@ export function createSseApp(
   return { app, transports };
 }
 
-export async function startSseTransport(server: McpServer, registry: BrokerRegistry): Promise<void> {
+export async function startSseTransport(serverFactory: ServerFactory, registry: BrokerRegistry): Promise<void> {
   const rawPort = parseInt(process.env['PORT'] ?? '3000', 10);
   const port = isNaN(rawPort) ? 3000 : rawPort;
   const rawRateLimit = parseInt(process.env['MCP_RATE_LIMIT_RPS'] ?? '10', 10);
   const rawMaxSessions = parseInt(process.env['MCP_MAX_SESSIONS'] ?? '100', 10);
   const trustProxy = process.env['TRUST_PROXY'];
 
-  const { app } = createSseApp(server, registry, {
+  const { app } = createSseApp(serverFactory, registry, {
     maxSessions: isNaN(rawMaxSessions) ? 100 : rawMaxSessions,
     rateLimit: isNaN(rawRateLimit) ? 10 : rawRateLimit,
     apiKey: process.env['MCP_API_KEY'],
