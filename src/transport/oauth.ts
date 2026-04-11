@@ -23,6 +23,7 @@ interface AccessToken {
 interface OAuthClient {
   clientId: string;
   redirectUris: string[];
+  createdAt: number;
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -71,6 +72,7 @@ export function createOAuthHandlers(options: OAuthOptions) {
     const now = Date.now();
     for (const [k, v] of authCodes) if (now > v.expiresAt) authCodes.delete(k);
     for (const [k, v] of accessTokens) if (now > v.expiresAt) accessTokens.delete(k);
+    for (const [k, v] of clients) if (now - v.createdAt > 24 * 60 * 60 * 1000) clients.delete(k);
   }, 300_000).unref();
 
   function mountRoutes(app: express.Application): void {
@@ -97,12 +99,13 @@ export function createOAuthHandlers(options: OAuthOptions) {
 
     app.post('/register', (req, res) => {
       const { redirect_uris } = req.body ?? {};
-      if (!Array.isArray(redirect_uris) || redirect_uris.length === 0) {
-        res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uris is required' });
+      if (!Array.isArray(redirect_uris) || redirect_uris.length === 0 ||
+          !redirect_uris.every((u: unknown): u is string => typeof u === 'string')) {
+        res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uris must be a non-empty array of strings' });
         return;
       }
       const clientId = crypto.randomUUID();
-      clients.set(clientId, { clientId, redirectUris: redirect_uris as string[] });
+      clients.set(clientId, { clientId, redirectUris: redirect_uris, createdAt: Date.now() });
       res.status(201).json({ client_id: clientId, redirect_uris });
     });
   }
